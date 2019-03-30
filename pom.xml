@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>T2P</groupId>
+    <artifactId>T2P</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>NlpToolkit</groupId>
+            <artifactId>WordNet</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>NlpToolkit</groupId>
+            <artifactId>MorphologicalAnalysis</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>NlpToolkit</groupId>
+            <artifactId>MorphologicalAnalysis</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>NlpToolkit</groupId>
+            <artifactId>Dictionary</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.36</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>zemberek-morphology</artifactId>
+            <version>0.17.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>-->
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>zemberek-morphology</artifactId>
+            <version>0.17.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>zemberek-ner</artifactId>
+            <version>0.17.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>zemberek-tokenization</artifactId>
+            <version>0.17.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>NlpToolkit</id>
+            <url>http://haydut.isikun.edu.tr:8081/artifactory/NlpToolkit</url>
+        </repository>
+        <repository>
+            <id>zemberek-repo</id>
+            <name>zemberek Maven Repo on Github</name>
+            <url>https://raw.github.com/ahmetaa/maven-repo/master</url>
+        </repository>
+    </repositories>
+
+</project>
