@@ -24,7 +24,7 @@ Steps for opening the cloned project:
 ###
 tested some random picked pictos.zemberek causes a problem in both inserting and selecting
 
-##PARTS THAT NEED FIXING
+## PARTS THAT NEED FIXING
 
 //FIXME
 * NER test dosyasini gelistir.
