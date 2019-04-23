@@ -41,11 +41,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Stream;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.lang3.*;
 
@@ -92,14 +89,14 @@ public class T2P {
         }
     }
 
-    static String URL = "jdbc:mysql://localhost/test?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
+    static String URL = "jdbc:mysql://localhost/picto2text?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
     static String USER = "root";
-    static String PASS = "hakki1996";
+    static String PASS = "248163264:Hakan";
     static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static String PICTO_FOLDER_PATH = "C:\\Users\\haQQi\\Documents\\Projects\\T2P\\src\\main\\resources\\Pictograms";
-    static String TABLE_NAME = "text2pic";
+    static String PICTO_FOLDER_PATH = "C:\\Users\\hakac\\T2P\\src\\main\\resources\\Pictograms";
+    static String TABLE_NAME = "texttopicto";
     static String[] edats = {"gibi", "kadar", "icin", "dolayi", "oturu", "yalniz", "ancak", "tek", "uzere", "sanki", "diye",};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
-    static int SYNONYM_LIMIT = 5;
+    static int SYNSET_LIMIT = 5;
 
     // Emine ile Pınar sinemaya gitti. (”İle” yerine ”ve” gelebilir. → Bağlaç) » Bu çalışma ile sonuç alınmaz. (”İle” yerine ”ve” getirilemez. → Edat)
 
@@ -109,7 +106,7 @@ public class T2P {
             .ignoreDiacriticsInAnalysis()
             .build();*/
 
-     public static WordNet turkish = new WordNet();
+    public static WordNet turkish = new WordNet();
 
     public static void main(String[] args) throws IOException {
 
@@ -147,30 +144,70 @@ public class T2P {
             }
         }*/
 
-        /*//SynSet SynSetForTest = turkish.getSynSetWithId("TUR10-0650680");
+//        SynSet SynSetForTest = turkish.getSynSetWithId("TUR10-0169670");
         //SynSet SynSetForTest = turkish.getSynSetWithLiteral("okul", 1);
-        ArrayList<SynSet> SynSetForTest = turkish.getSynSetsWithLiteral("muz");
-
-        //Print array synset
-        for (int i = 0; i < SynSetForTest.size(); i++) {
-            printSynSet(SynSetForTest.get(i));
-        }
+//        ArrayList<SynSet> SynSetForTest = turkish.getSynSetsWithLiteral("vali");
+//
+//        //Print array synset
+//        for (int i = 0; i < SynSetForTest.size(); i++) {
+//            printSynSet(SynSetForTest.get(i));
+//            printSynSet(SynSetForTest);
+//        }
 
         //Finds and print specific relations to end
-        for (int i = 0; i < SynSetForTest.size(); i++) {
-            printSynSet(SynSetForTest.get(i));
-            *//*Semantic types
-                ANTONYM, HYPERNYM,
-                INSTANCE_HYPERNYM, HYPONYM, INSTANCE_HYPONYM, MEMBER_HOLONYM, SUBSTANCE_HOLONYM,
-                PART_HOLONYM, MEMBER_MERONYM, SUBSTANCE_MERONYM, PART_MERONYM, ATTRIBUTE,
-                DERIVATION_RELATED, DOMAIN_TOPIC, MEMBER_TOPIC, DOMAIN_REGION, MEMBER_REGION,
-                DOMAIN_USAGE, MEMBER_USAGE, ENTAILMENT, CAUSE, ALSO_SEE,
-                VERB_GROUP, SIMILAR_TO, PARTICIPLE_OF_VERB*//*
-            findRelationSynSet(SynSetForTest.get(i), SemanticRelationType.DOMAIN_TOPIC, turkish);
-        }*/
+//        for (int i = 0; i < SynSetForTest.size(); i++) {
+//            printSynSet(SynSetForTest.get(i));
+////            Semantic types
+////                ANTONYM, HYPERNYM,
+////                INSTANCE_HYPERNYM, HYPONYM, INSTANCE_HYPONYM, MEMBER_HOLONYM, SUBSTANCE_HOLONYM,
+////                PART_HOLONYM, MEMBER_MERONYM, SUBSTANCE_MERONYM, PART_MERONYM, ATTRIBUTE,
+////                DERIVATION_RELATED, DOMAIN_TOPIC, MEMBER_TOPIC, DOMAIN_REGION, MEMBER_REGION,
+////                DOMAIN_USAGE, MEMBER_USAGE, ENTAILMENT, CAUSE, ALSO_SEE,
+////                VERB_GROUP, SIMILAR_TO, PARTICIPLE_OF_VERB
+//            findRelationSynSet(SynSetForTest.get(i), SemanticRelationType.DOMAIN_TOPIC, turkish);
+//        }
+        // System.out.println(findLexialSynonym("reis", Pos.NOUN));
 
-        //linkerSynsetPictogram(listAllFiles(PICTO_FOLDER_PATH));
 
+        // TODO query yapısını kelimeleri brute force arayacak şekilde update'le. //tamamlandı
+        // TODO synonym list sonsuz döngüyü engelle. olmadı ama sorun değil
+
+//            test of remover
+//        System.out.println(removeLemmaPos("test:NOUN", "pos"));
+//        System.out.println(removeLemmaPos("test:NOUN", "lemma"));
+//
+//        List<String> testTamlama = new ArrayList<>();
+//        testTamlama.add("monster");
+//        testTamlama.add("enerji");
+//        testTamlama.add("içeçeği");
+//        for(String s : queryBuilder(testTamlama)){
+//            System.out.println(s);
+//        }
+//        System.out.println(queryBuilder(testTamlama));
+//        List<List<String>> combinations = generate(testTamlama, 3);
+//        for (List<String> combination : combinations) {
+//            System.out.println(combination);
+//        }
+
+//        int N=3,R=2;
+//        List<int[]> combinations = generate(N, R);
+//        for (int[] combination : combinations) {
+//            System.out.println(Arrays.toString(combination));
+//        }
+//        System.out.printf("generated %d combinations of %d items from %d ", combinations.size(), R, N);
+//        List<List<String>> test = new ArrayList<>();
+//        List<String> testList1 = new ArrayList<>();
+//        List<String> testList2 = new ArrayList<>();
+//        testList1.add("enerji");
+//        testList1.add("baba");
+//        testList1.add("dedelik");
+//        testList1.add("uzaylı");
+//        testList2.add("içecek");
+//
+//        test.add(testList1);
+//        test.add(testList2);
+//
+//        System.out.println(multiply(test));
     }
 
     public static List<List<String>> Input2Picto(String input) throws IOException {
@@ -378,7 +415,6 @@ public class T2P {
         return out;
 
 
-
         //SelectDB(out, sentences);//3.parametre eklenebilir special cumleler(tamlama,cogul vs.)
         //0 -> original sentence,1->lemmazation
         //normal cumleler + tamlamali,cogullu vs cumleler olabilir
@@ -431,46 +467,39 @@ public class T2P {
         }
         return list;
     }
+
     static public List<String> SelectDB(List<String> text) {
         int i, j, z;
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
 
-        List<String> pictoList = new ArrayList<String>();
+        List<String> pictoList = new ArrayList<>();
+        List<String> pictoListTemp = new ArrayList<>();
         List<String> synonymList = new ArrayList<>();
+        List<String> synonymListTemp = new ArrayList<>();
 
         try {
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(URL, USER, PASS);
-            //execute
             stmt = conn.createStatement();
-            /*
-            -Kelimeler ve POSları arrayda sırayla gelmiştir.
-            -Her lemma için bir synonym, hypernym, hyponym arama fonksiyonu gerekiyor.
-                -En düşük sense synset'inden 5 fazlasına kadar.
-                -
-            -Kalan nounların, cümle içi noun ve verb'lerlen birleşip aranması.
-            -0. eleman P- ise çoğul T- ise tamlama
-            -
-
-            */
 
             for (String templateText : text) {
-
                 if (templateText.equals(",") || templateText.equals("+")) {
                     pictoList.add("artı.png");
                 } else if (templateText.equals(".")) {
                     pictoList.add("nokta.png");
                 } else if (templateText.substring(0, 2).equals("T-")) {
-                    rs = stmt.executeQuery(queryBuilder(templateText));
-                    if (!rs.next()) {
-                        continue;
-                    }
-                    do {
-                        System.out.println(rs.getString("A.pictoName"));
-                    }
-                    while (rs.next());
+
+
+                    //                    rs = stmt.executeQuery(queryBuilder(templateText));
+//                    if (!rs.next()) {
+//                        continue;
+//                    }
+//                    do {
+//                        System.out.println(rs.getString("A.pictoName"));
+//                    }
+//                    while (rs.next());
                 } else {
                  /*
                  - İlk tekli gelen fiil ile eşleşecek
@@ -479,45 +508,31 @@ public class T2P {
                  - Bu aralarda lexial simp. kullanılacak.
                   */
 
-
-                    synonymList.addAll(findLexialSynonym(templateText.substring(0, templateText.indexOf(":")), Pos.valueOf(templateText.substring(templateText.indexOf(":") + 1))));
-                    System.out.println(synonymList);
-                    //POSTAG EKLE
+                    synonymList.addAll(findLexialSynonym(removeLemmaPos(templateText, "pos"), Pos.valueOf(removeLemmaPos(templateText, "lemma"))));
                     for (i = 0; i < synonymList.size(); i++) {
-                        System.out.println("query: " +queryBuilder(synonymList.get(i)));
-                        rs = stmt.executeQuery(queryBuilder(synonymList.get(i)));
+                        synonymListTemp.add(synonymList.get(i));
+                        synonymListTemp.set(0, removeLemmaPos(synonymListTemp.get(0), "pos"));
+                        String s = queryBuilder(synonymListTemp).get(0);//tek lemma gittigi icin ilk index alınsın
+
+                        System.out.println(s);
+                        rs = stmt.executeQuery(s);
+
                         if (!rs.next()) {
+                            synonymListTemp.clear();
                             continue;
-                        } else {
-                            pictoList.add(rs.getString("A.pictoName"));
-                            synonymList.clear();
-                            break;
                         }
-//                        do {
-//                            System.out.println(rs.getString("A.pictoName"));
-//                        }
-//                        while (rs.next());
+                        do {
+                            pictoListTemp.add(rs.getString("A.pictoName"));
+                            synonymListTemp.clear();
+                            i = 100;
+                        }
+                        while (rs.next());
                     }
-
-                    /*rs = stmt.executeQuery(queryBuilder(templateText));
-                    if (!rs.next()) {
-                       a continue;
-                    } else {
-                        pictoList.add(rs.getString("A.pictoName"));
-                    }*/
-
-
-//                    do {
-//                    }
-//                    while (rs.next());
+                    pictoList.addAll(selectPicto(pictoListTemp));
+                    synonymList.clear();
+                    pictoListTemp.clear();
                 }
             }
-
-//            String sqlQuery_Select = "SELECT pictoName,synsetID FROM " + TABLE_NAME + " WHERE lemma = '" + lemma + "' AND posTag = '" + posTag + "';";
-//            rs = stmt.executeQuery(sqlQuery_Select);
-//            while (rs.next()) {
-//                System.out.println("pictoName -> " + rs.getString("pictoName") + " SynsetID -> " + rs.getString("synsetID") + " WHERE lemma=" + lemma + " posTag=" + posTag);
-//            }
 
             rs.close();
             stmt.close();
@@ -542,90 +557,187 @@ public class T2P {
                 se.printStackTrace();
             }//end finally try
         }//end try
-        System.out.println("pictolist "+ pictoList);
         return pictoList;
+    }
+
+    static public List<String> selectPicto(List<String> pictoList) {
+        /*
+            Function = PictoSelectör(picto list)
+            En basit pictogramı bul.
+             */
+        String[] counter;
+        List<String> picto_Selected = new ArrayList<>();
+        int i, j;
+        for (i = 1; i < 6; i++) {
+            for (j = 0; j < pictoList.size(); j++) {
+                counter = pictoList.get(j).replace(".png", "").split("\\s");
+                if (counter.length == i) {
+                    picto_Selected.add(pictoList.get(j));
+                    i = 10;
+                    break;
+                }
+            }
+        }
+        return picto_Selected;
     }
 
     static public List<String> findLexialSynonym(String literal, Pos POStag) {
         int i, j, k, sense = 1;
-        List<String> synonym_SearchList = new ArrayList<>();
+        List<String> SYNONYM_SearchList = new ArrayList<>();
+        List<SynSet> orderedSynSet_List = new ArrayList<SynSet>();
+        List<SemanticRelationType> searching_Relations = new ArrayList<SemanticRelationType>();
+        searching_Relations.add(HYPONYM);
+        searching_Relations.add(HYPERNYM);
+        searching_Relations.add(DOMAIN_TOPIC);
+        searching_Relations.add(MEMBER_TOPIC);
         String tempString;
         boolean dublucated;
-        synonym_SearchList.add(literal+":"+POStag);
-        //ArrayList<SynSet> SynSets = turkish.getSynSetsWithLiteral(literal);
+        SYNONYM_SearchList.add(literal + ":" + POStag);
         SynSet tempSynSet;
-        for (i = 0; i < SYNONYM_LIMIT; i++) {
+
+        //en fazla 5 adet synset alıyor
+        for (i = 0; i < SYNSET_LIMIT; i++) {
             tempSynSet = turkish.getSynSetWithLiteral(literal, sense);
             if (tempSynSet == null || tempSynSet.getPos() != POStag) {
                 i--;
             } else {
-                for (j = 0; j < tempSynSet.getSynonym().literalSize(); j++) {
-                    dublucated = true;
-                    //[0-9]+   \\d+
-                    tempString = tempSynSet.getSynonym().getLiteral(j).toString().replaceAll("\\d+", "").trim()+":"+POStag;//+":"+WordPos
-                    for (k = 0; k < synonym_SearchList.size(); k++) {
-                        if (synonym_SearchList.get(k).equals(tempString)) {
-                            dublucated = false;
-                        }
-                    }
-                    if (dublucated == true && tempString != null) {
-                        synonym_SearchList.add(tempString);
-                    }
-                }
+                orderedSynSet_List.add(tempSynSet);
             }
             sense++;
             if (sense == 50) {
                 break;
             }
         }
+        int staticSize = orderedSynSet_List.size();
+        for (i = 0; i < searching_Relations.size(); i++) {
+            for (j = 0; j < staticSize; j++) {
+                tempSynSet = orderedSynSet_List.get(j);
+                for (k = 0; k < tempSynSet.relationSize(); k++) {
+                    Relation r = tempSynSet.getRelation(k);
+                    if (r instanceof SemanticRelation) {
+                        if (((SemanticRelation) r).getRelationType().equals(searching_Relations.get(i))) {
+                            orderedSynSet_List.add(turkish.getSynSetWithId(tempSynSet.getRelation(k).getName()));
+                        }
+                    }
+                }
+
+            }
+        }
+
+        for (i = 0; i < orderedSynSet_List.size(); i++) {
+            tempSynSet = orderedSynSet_List.get(i);
+            for (j = 0; j < tempSynSet.getSynonym().literalSize(); j++) {
+                dublucated = false;
+                tempString = tempSynSet.getSynonym().getLiteral(j).toString().replaceAll("\\d+", "").trim() + ":" + POStag;
+                for (k = 0; k < SYNONYM_SearchList.size(); k++) {
+                    if (SYNONYM_SearchList.get(k).equals(tempString) || dublucated == true) {
+                        dublucated = true;
+                    }
+                }
+                if (tempString != null && dublucated == false) {
+                    SYNONYM_SearchList.add(tempString);
+                }
+            }
+        }
+//                for (j = 0; j < tempSynSet.getSynonym().literalSize(); j++) {
+//                    dublucated = true;
+//                    //[0-9]+   \\d+
+//                    tempString = tempSynSet.getSynonym().getLiteral(j).toString().replaceAll("\\d+", "").trim()+":"+POStag;//+":"+WordPos
+//                    for (k = 0; k < SYNONYM_SearchList.size(); k++) {
+//                        if (SYNONYM_SearchList.get(k).equals(tempString)) {
+//                            dublucated = false;
+//                        }
+//                    }
+//                    if (dublucated == true && tempString != null) {
+//                        SYNONYM_SearchList.add(tempString);
+//                    }
+//                }
+        //                for (j = 0; j < tempSynSet.getSynonym().literalSize(); j++) {
+//                    dublucated = true;
+//                    //[0-9]+   \\d+
+//                    tempString = tempSynSet.getSynonym().getLiteral(j).toString().replaceAll("\\d+", "").trim()+":"+POStag;//+":"+WordPos
+//                    for (k = 0; k < SYNONYM_SearchList.size(); k++) {
+//                        if (SYNONYM_SearchList.get(k).equals(tempString)) {
+//                            dublucated = false;
+//                        }
+//                    }
+//                    if (dublucated == true && tempString != null) {
+//                        SYNONYM_SearchList.add(tempString);
+//                    }
+//                }
+
+//            for (i = 0; i < orderedSynSet_List.size(); i++) {
+//                printSynSet(orderedSynSet_List.get(i));
+////            printSynSet(SynSetForTest);
+//            }
+//            for (i = 0; i < SynSetPrint.relationSize(); i++) {
+//                Relation r = SynSetPrint.getRelation(i);
+//                if (r instanceof SemanticRelation) {
+//                    if (((SemanticRelation) r).getRelationType().equals(relationType)) {
+//                        System.out.println("\tFind->Relation " + (i + 1) + ": " + SynSetPrint.getRelation(i));
+//                        SynSetIDTemp = SynSetPrint.getRelation(i).getName();
+//                        findRelationSynSet(wordNet.getSynSetWithId(SynSetIDTemp), relationType, wordNet);
+//                    }
+//                }
+//            }
+
 
 //        for (i = 0; i<SynSets.size();i++){
 //            for(j = 0;j<SynSets.get(i).getSynonym().literalSize();j++){
 //                //synonym_SearchList.add(SynSets.get(i).getSynonym().getLiteral(j));
 //            }
 //        }
-        return synonym_SearchList;
+        return SYNONYM_SearchList;
     }
 
-    static public String queryBuilder(String ortakArayıcı) {
-        int i;
-        List<String> tamlamaTemp = new ArrayList<>();
-        String[] Data_objectName = {"A", "B", "C", "D", "E"};
-        String SELECT_QueryPart = "SELECT DISTINCT A.pictoName";
-        String FROM_QueryPart = " FROM";
-        String WHERE_QueryPart = " WHERE ";
-        String SearchObject_QueryPart = "";
-        String JointMember_QueryPart = "";
+    static public List<String> queryBuilder(List<String> ortakArayıcı) {
+        int i, j;
+        List<String> queries = new ArrayList<>();
+        List<List<String>> combinations = new ArrayList<>();
+
         //String GROUPBY_QueryPart = " GROUP BY A.lemma"; //lemma gruplandirmasi dogru calismiyor
-        System.out.println(ortakArayıcı);
+        //System.out.println(ortakArayıcı);
 
         /*
-        - P- için ayrı query oluşturma gerekebilir ya da onun için öncede split edilip bu fonksiyona yollanabilir.
+        - Bütün tamlamalar, falan hepsi tek tek array içinde gelsin
+        - Query builder kombinasyon şansını üretip sırayla araye atıp yollasın.
          */
-        if (ortakArayıcı.substring(0, 2).equals("T-") || ortakArayıcı.substring(0, 2).equals("P-")) {
-            for (String splited : ortakArayıcı.substring(2).split("\\+")) {
-                tamlamaTemp.add(splited.substring(0, splited.indexOf(":")));
-            }
-        } else {
-            tamlamaTemp.add(ortakArayıcı.substring(0, ortakArayıcı.indexOf(":")));
-        }
+//        if (ortakArayıcı.substring(0, 2).equals("T-") || ortakArayıcı.substring(0, 2).equals("P-")) {
+//            for (String splited : ortakArayıcı.substring(2).split("\\+")) {
+//                tamlamaTemp.add(splited.substring(0, splited.indexOf(":")));
+//            }
+//        } else {
+//            tamlamaTemp.add(ortakArayıcı.substring(0, ortakArayıcı.indexOf(":")));
+//        }
 
-        for (i = 0; i < tamlamaTemp.size(); i++) {
-            SELECT_QueryPart += ", " + Data_objectName[i] + ".lemma";
-            FROM_QueryPart += " text2pic " + Data_objectName[i];
-            if (tamlamaTemp.size() - 1 != i) {
-                FROM_QueryPart += ", ";
-            }
-            SearchObject_QueryPart += Data_objectName[i] + ".lemma='" + tamlamaTemp.get(i) + "'";
-            if (tamlamaTemp.size() != 1) {
-                SearchObject_QueryPart += " AND ";
-                JointMember_QueryPart += Data_objectName[i] + ".pictoName";
-                if (tamlamaTemp.size() - 1 != i) {
-                    JointMember_QueryPart += "=";
+        for (j = ortakArayıcı.size(); j > 0; j--) {
+            combinations.addAll(generate(ortakArayıcı, j));
+        }
+        for (List<String> combination : combinations) {
+            String[] Data_objectName = {"A", "B", "C", "D", "E"};
+            String SELECT_QueryPart = "SELECT DISTINCT A.pictoName";
+            String FROM_QueryPart = " FROM";
+            String WHERE_QueryPart = " WHERE ";
+            String SearchObject_QueryPart = "";
+            String JointMember_QueryPart = "";
+            for (i = 0; i < combination.size(); i++) {
+                SELECT_QueryPart += ", " + Data_objectName[i] + ".lemma";
+                FROM_QueryPart += " texttopicto " + Data_objectName[i];
+                if (combination.size() - 1 != i) {
+                    FROM_QueryPart += ", ";
+                }
+                SearchObject_QueryPart += Data_objectName[i] + ".lemma='" + combination.get(i) + "'";
+                if (combination.size() != 1) {
+                    SearchObject_QueryPart += " AND ";
+                    JointMember_QueryPart += Data_objectName[i] + ".pictoName";
+                    if (combination.size() - 1 != i) {
+                        JointMember_QueryPart += "=";
+                    }
                 }
             }
+            queries.add(SELECT_QueryPart + FROM_QueryPart + WHERE_QueryPart + SearchObject_QueryPart + JointMember_QueryPart);
         }
-        return SELECT_QueryPart + FROM_QueryPart + WHERE_QueryPart + SearchObject_QueryPart + JointMember_QueryPart;
+        return queries;
     }
 
     public static void printSynSet(SynSet SynSetPrint) {
@@ -1076,4 +1188,92 @@ public class T2P {
         }
         return posTag;
     }//morphList yerine String yap
+
+    static public String removeLemmaPos(String morfic, String part) {
+        if (part.equals("pos")) {
+            return morfic.substring(0, morfic.indexOf(":"));
+        } else if (part.equals("lemma")) {
+            return morfic.substring(morfic.indexOf(":") + 1);
+        } else {
+            return morfic;
+        }
+    }
+
+    public static void helper(List<List<String>> combinations, String data[], int startPoint, List<String> lemmas, int index) {
+        String[] datas = data.clone();
+        if (index == datas.length) {
+            List<String> combination = Arrays.asList(datas);
+            combinations.add(combination);
+        } else if (startPoint <= lemmas.size() - 1) {
+            datas[index] = lemmas.get(startPoint);
+            helper(combinations, datas, startPoint + 1, lemmas, index + 1);
+            helper(combinations, datas, startPoint + 1, lemmas, index);
+        }
+    }
+
+    public static List<List<String>> generate(List<String> lemmas, int r) {
+        List<List<String>> combinations = new ArrayList<>();
+        helper(combinations, new String[r], 0, lemmas, 0);
+        return combinations;
+    }
+
+//
+//    private static void helper(List<int[]> combinations, int data[], int start, int end, int index) {
+//        if (index == data.length) {
+//            int[] combination = data.clone();
+//            combinations.add(combination);
+//        } else if (start <= end) {
+//            data[index] = start;
+//            helper(combinations, data, start + 1, end, index + 1);
+//            helper(combinations, data, start + 1, end, index);
+//        }
+//    }
+//
+//    public static List<int[]> generate(int n, int r) {
+//        List<int[]> combinations = new ArrayList<>();
+//        helper(combinations, new int[r], 0, n-1, 0);
+//        return combinations;
+//    }
+
+//    public static List<String> combinator(List<String> lemmas){
+//        int i, j;
+//        List<String> tempList = new ArrayList<>();
+//        List<String> combinedList = new ArrayList<>();
+//
+//        // 1 2 3 | 1 3 | 1 2 | 2 3 | 1 | 2 | 3
+//
+//        for (i = lemmas.size(); i == 0 ; i--){
+//            for (j = 0;j<i;j++)
+//            tempList.add(lemmas.get(j));
+//        }
+//
+//        return combinedList;
+//    }
+//    private static void multiply(List<List<String>> factors, List<String> current, List<List<String>> results) {
+//        if (current.size() >= factors.size()) {
+//            // Don't really need to make a deeper copy with String values
+//            // but might as well in case we change types later.
+//            List<String> result = new ArrayList<>();
+//            for (String s : current) {
+//                result.add(new String(s));
+//            }
+//            results.add(result);
+//
+//            return;
+//        }
+//
+//        int currentIndex = current.size();
+//        for (String s : factors.get(currentIndex)) {
+//            current.add(s);
+//            multiply(factors, current, results);
+//            current.remove(currentIndex);
+//        }
+//    }
+//
+//    private static List<List<String>> multiply(List<List<String>> factors) {
+//        List<List<String>> results = new ArrayList<>();
+//        multiply(factors, new ArrayList<String>(), results);
+//        return results;
+//    }
+
 }
