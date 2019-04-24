@@ -159,19 +159,21 @@ public class Gui extends JPanel {//implements ActionListener
                 //temp.add("akvaryum.png");
                 //temp.add("ejderha.png");
                 //temp.add("enerji.png");
-                temp.add(".");
+                if(!temp.isEmpty() && temp.get(temp.size()-1)!="nokta.png")
+                    temp.add("nokta.png");
 
                 //imageMap=createImageMap(temp.toArray(new String[0]));
                 System.out.println(temp);
                 int count = 0;
                 for (String s : temp) {
-                    if (s == ".")
+                    if (s == "nokta.png")
                         count++;
                 }
                 for(int i =0;i<count;i++){
-                    sentences.add(temp.subList(0,temp.indexOf(".")));
-                    temp=temp.subList(temp.indexOf(".")+1,temp.size());
+                    sentences.add(temp.subList(0,temp.indexOf("nokta.png")+1));
+                    temp=temp.subList(temp.indexOf("nokta.png")+1,temp.size());
                 }
+                System.out.println("sentences : "+sentences);
                 for (List<String> sentence : sentences) {
                     System.out.println(sentence);
                     String[] arr = sentence.toArray(new String[0]);

@@ -3,24 +3,17 @@
 // check more info here : https://stackoverflow.com/questions/11677572/dealing-with-xerces-hell-in-java-maven
 
 //FIXME
-// - NER kullan.
-// - zemberek sacma sacma kokler aliyo reyizin morfolojisine bak(maybe ITS BECAUSE .ignoreDiacriticsInAnalysis())
 // - SyntaxAnalysis
-// - deletePossession updatele(posTag iptal)
-// - linkersynsetpictogram (yuklerken orjinal kelimeyi al possession yoksa).
-// - selectdb ye ınput olarak belirsizIsimTamlamalari,pluralWords yollanabilir sadece 1 kere calissin fonksiyon(nereye koyulcak eger bu pictoalr varsa)
-// - enerji icecegini -> enerji icecegi
 // - turkishmorptactics.a1pl vs
 // - GET SPECIAL SENTENCE CONDITIONS IN ONE FUNCTION.
 // - FUNCTION RETURN TYPE LARI DUZELT.
-// - STOPWRODS FILTER.
+// - STOPWORDS FILTER.
 // - function return type list -> String(containing replaced part and index(list))
-// - PLURAL TAG GUNCELLE P-
-// - DEVRIK CUMLE -> verbi en sona at
+// - DEVRIK CUMLE -> verbi en sona at ( MAKE LINKEDLIST MAYBE ? -> YOU CAN TRAVERSE THE WORDS CHECK IF THE VERB IS IN THE END ? )
 // - PLURAL AND TAMLAMA AT THE SAME TIME
-// - NER (2 tane 2+kelimeli ner durumu) + NERTEST GELISTIR + HER CUMLE NERE GIRMESIN
+// - NERTEST GELISTIR + HER CUMLE NERE GIRMESIN
 // - P-kitaplar:NOUN+kitap:NOUN
-// -
+// - COGUL SUAN SADECE CUMLEDE 1 TANE COGUL VARSA CALISIYO DUZELT
 
 import Dictionary.Pos;
 import WordNet.*;
@@ -41,8 +34,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.*;
 
@@ -66,17 +62,17 @@ public class T2P {
         NounTime("NOUN"),
         Adj("ADJECTIVE"),
         Adv("ADVERB"),
-        Conj("CONJUCTION"),
+        Conj("CONJUNCTION"),
         Interj("INTERJECTION"),
         Verb("VERB"),
         Pron("PRONOUN"),
-        Num("NUMERAL"),
-        Det("DETERMINER"),
-        PostP("POSTPOSITIVE"),
-        Ques("QUESTION"),
-        Dup("DUPLICATOR"),
-        Punc("PUNCTUATION"),
-        Unk("UNKNOWN");
+        Num("NOUN"),
+        Det("NOUN"),
+        PostP("NOUN"),
+        Ques("NOUN"),
+        Dup("NOUN"),
+        Punc("NOUN"),
+        Unk("NOUN");
 
         private String WordnetForm;
 
@@ -89,13 +85,13 @@ public class T2P {
         }
     }
 
-    static String URL = "jdbc:mysql://localhost/picto2text?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
+    static String URL = "jdbc:mysql://localhost/test?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
     static String USER = "root";
-    static String PASS = "248163264:Hakan";
+    static String PASS = "hakki1996";
     static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static String PICTO_FOLDER_PATH = "C:\\Users\\hakac\\T2P\\src\\main\\resources\\Pictograms";
-    static String TABLE_NAME = "texttopicto";
-    static String[] edats = {"gibi", "kadar", "icin", "dolayi", "oturu", "yalniz", "ancak", "tek", "uzere", "sanki", "diye",};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
+    static String PICTO_FOLDER_PATH = "C:\\Users\\haQQi\\Documents\\Projects\\T2P\\src\\main\\resources\\Pictograms";
+    static String TABLE_NAME = "text2pic";
+    static String[] edats = {"gibi", "kadar", "için", "dolayı", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
     static int SYNSET_LIMIT = 5;
 
     // Emine ile Pınar sinemaya gitti. (”İle” yerine ”ve” gelebilir. → Bağlaç) » Bu çalışma ile sonuç alınmaz. (”İle” yerine ”ve” getirilemez. → Edat)
@@ -113,7 +109,6 @@ public class T2P {
         //named entity recognition(look NerTraining.java for more)
         //System.out.println(NerTraining.NER("Ali Kaan yarın Ayvalık Belediyesi'ne gidecek."));
         //System.out.println("Ayşe yarın İstanbul'a gidecek.");
-        //Gui.main(NerTraining.NER("abc"));
 
         //linking
         //ArrayList<String> fileNamesTemp = new ArrayList<>(listAllFiles(PICTO_FOLDER_PATH));
@@ -128,11 +123,10 @@ public class T2P {
         //getTamlama("Ahmet enerji içeceği icti.");
         //getPersonTag("Köpekler saldırdı.");
 
-        /*Scanner scan = new Scanner(System.in);
+        Scanner scan = new Scanner(System.in);
         System.out.println("Input : ");
         String input = scan.nextLine();
-        Input2Picto(input);*/
-
+        Input2Picto(input);
 
         /*for (String s : deletePossession("enerji icecegi")) {
             System.out.println(s.substring(0, s.indexOf(":")));
@@ -144,70 +138,30 @@ public class T2P {
             }
         }*/
 
-//        SynSet SynSetForTest = turkish.getSynSetWithId("TUR10-0169670");
+        /*//SynSet SynSetForTest = turkish.getSynSetWithId("TUR10-0650680");
         //SynSet SynSetForTest = turkish.getSynSetWithLiteral("okul", 1);
-//        ArrayList<SynSet> SynSetForTest = turkish.getSynSetsWithLiteral("vali");
-//
-//        //Print array synset
-//        for (int i = 0; i < SynSetForTest.size(); i++) {
-//            printSynSet(SynSetForTest.get(i));
-//            printSynSet(SynSetForTest);
-//        }
+        ArrayList<SynSet> SynSetForTest = turkish.getSynSetsWithLiteral("muz");
+
+        //Print array synset
+        for (int i = 0; i < SynSetForTest.size(); i++) {
+            printSynSet(SynSetForTest.get(i));
+        }
 
         //Finds and print specific relations to end
-//        for (int i = 0; i < SynSetForTest.size(); i++) {
-//            printSynSet(SynSetForTest.get(i));
-////            Semantic types
-////                ANTONYM, HYPERNYM,
-////                INSTANCE_HYPERNYM, HYPONYM, INSTANCE_HYPONYM, MEMBER_HOLONYM, SUBSTANCE_HOLONYM,
-////                PART_HOLONYM, MEMBER_MERONYM, SUBSTANCE_MERONYM, PART_MERONYM, ATTRIBUTE,
-////                DERIVATION_RELATED, DOMAIN_TOPIC, MEMBER_TOPIC, DOMAIN_REGION, MEMBER_REGION,
-////                DOMAIN_USAGE, MEMBER_USAGE, ENTAILMENT, CAUSE, ALSO_SEE,
-////                VERB_GROUP, SIMILAR_TO, PARTICIPLE_OF_VERB
-//            findRelationSynSet(SynSetForTest.get(i), SemanticRelationType.DOMAIN_TOPIC, turkish);
-//        }
-        // System.out.println(findLexialSynonym("reis", Pos.NOUN));
+        for (int i = 0; i < SynSetForTest.size(); i++) {
+            printSynSet(SynSetForTest.get(i));
+            *//*Semantic types
+                ANTONYM, HYPERNYM,
+                INSTANCE_HYPERNYM, HYPONYM, INSTANCE_HYPONYM, MEMBER_HOLONYM, SUBSTANCE_HOLONYM,
+                PART_HOLONYM, MEMBER_MERONYM, SUBSTANCE_MERONYM, PART_MERONYM, ATTRIBUTE,
+                DERIVATION_RELATED, DOMAIN_TOPIC, MEMBER_TOPIC, DOMAIN_REGION, MEMBER_REGION,
+                DOMAIN_USAGE, MEMBER_USAGE, ENTAILMENT, CAUSE, ALSO_SEE,
+                VERB_GROUP, SIMILAR_TO, PARTICIPLE_OF_VERB*//*
+            findRelationSynSet(SynSetForTest.get(i), SemanticRelationType.DOMAIN_TOPIC, turkish);
+        }*/
 
+        //linkerSynsetPictogram(listAllFiles(PICTO_FOLDER_PATH));
 
-        // TODO query yapısını kelimeleri brute force arayacak şekilde update'le. //tamamlandı
-        // TODO synonym list sonsuz döngüyü engelle. olmadı ama sorun değil
-
-//            test of remover
-//        System.out.println(removeLemmaPos("test:NOUN", "pos"));
-//        System.out.println(removeLemmaPos("test:NOUN", "lemma"));
-//
-//        List<String> testTamlama = new ArrayList<>();
-//        testTamlama.add("monster");
-//        testTamlama.add("enerji");
-//        testTamlama.add("içeçeği");
-//        for(String s : queryBuilder(testTamlama)){
-//            System.out.println(s);
-//        }
-//        System.out.println(queryBuilder(testTamlama));
-//        List<List<String>> combinations = generate(testTamlama, 3);
-//        for (List<String> combination : combinations) {
-//            System.out.println(combination);
-//        }
-
-//        int N=3,R=2;
-//        List<int[]> combinations = generate(N, R);
-//        for (int[] combination : combinations) {
-//            System.out.println(Arrays.toString(combination));
-//        }
-//        System.out.printf("generated %d combinations of %d items from %d ", combinations.size(), R, N);
-//        List<List<String>> test = new ArrayList<>();
-//        List<String> testList1 = new ArrayList<>();
-//        List<String> testList2 = new ArrayList<>();
-//        testList1.add("enerji");
-//        testList1.add("baba");
-//        testList1.add("dedelik");
-//        testList1.add("uzaylı");
-//        testList2.add("içecek");
-//
-//        test.add(testList1);
-//        test.add(testList2);
-//
-//        System.out.println(multiply(test));
     }
 
     public static List<List<String>> Input2Picto(String input) throws IOException {
@@ -215,12 +169,12 @@ public class T2P {
         //sentence extractor ()
         TurkishSentenceExtractor extractor = TurkishSentenceExtractor.DEFAULT;
 
-        /*Scanner scan = new Scanner(System.in);
-        System.out.println("Input : ");
-        String input = scan.nextLine();*/
         boolean hasPNoun = false;
         boolean hasTamlama = false;
         boolean hasPlural = false;
+        boolean hasTamlamaInNer = false;
+        boolean hasPunc = false;
+        int indexVerb = 0;
         List<String> sentences = extractor.fromParagraph(input);
         List<List<String>> out = new ArrayList<List<String>>();
         List<List<String>> original = new ArrayList<List<String>>();
@@ -228,6 +182,7 @@ public class T2P {
         String temp2 = "";
         int count = 0;
         boolean isPrevNoun = false;
+
 
         // every word of each sentence
         /*for (int i = 0; i < sentences.size(); i++) {
@@ -246,11 +201,11 @@ public class T2P {
             String lemma = "";
             String posTag = "";
             String replace = "";
-            String tempNer = "";
-            //String indexes="";
-            //List<String> indexx=new ArrayList<String>();
-            List<Integer> indexx = new ArrayList<Integer>();
+            String replaceCogul = "";
+            String[] indexess = new String[10];
+            int removed = 0;
             List<String> ner = new ArrayList<String>();
+
             ner = NerTraining.NER(str);
             for (int i = 0; i < ner.size(); i++) {
                 ner.set(i, ner.get(i).replaceAll("\'", ""));//replaceAll("[^a-zA-Z ]", "").toLowerCase());
@@ -260,12 +215,13 @@ public class T2P {
             List<WordAnalysis> analysis = morphology.analyzeSentence(str);
             SentenceAnalysis disambiguation = morphology.disambiguate(str, analysis);
             List<SingleAnalysis> bestAnalysis = disambiguation.bestAnalysis();
+            System.out.println(bestAnalysis.size());
 
             for (SingleAnalysis s : bestAnalysis) {
 
                 originalSentence += s.surfaceForm() + " ";
 
-                if (Arrays.asList(edats).contains(s.surfaceForm())) continue;
+                if (Arrays.asList(edats).contains(s.surfaceForm())) continue; //duzelt s.formatlexical
                 if (s.getPos().getStringForm() == "Conj") {
                     list.add("+");
                     continue;
@@ -287,8 +243,11 @@ public class T2P {
                     //continue;
                 }
                 if (ContainsPossession(s.getMorphemes())) {
-                    if (getTamlama(str) != "")
+                    if (getTamlama(str) != "") {
                         hasTamlama = true;
+                        String[] splitt = getTamlama(str).split("-");
+                        indexess = splitt[0].split(",");
+                    }
                     sentenceType = SentenceType.Tamlama;
                 }
                 list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));
@@ -299,10 +258,28 @@ public class T2P {
                         list.add(nerr.substring(1, nerr.indexOf(" ")));
                     } else if (StringUtils.containsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {//CONTAINS AND EQUALS AYRI AYRI CONTAINS-> 2LI OZEL
                         System.out.println("contains girdi");
-                        tempNer = nerr.substring(1, nerr.indexOf(" "));
-                        //indexx.add(Integer.toString(count)+","+tempNer);
-                        indexx.add(count);
+                        if (!temp.trim().equals(s.surfaceForm()))
+                            temp += s.surfaceForm() + " ";
+                        if (StringUtils.equalsIgnoreCase(temp.trim(), nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1))) {
+                            System.out.println("hebele");
+                            System.out.println(Arrays.asList(indexess));
+                            System.out.println(count);
+                            if (ArrayUtils.contains(indexess, Integer.toString(count)))
+                                hasTamlamaInNer = true;
+                            for (int i = StringUtils.countMatches(temp.trim(), " "); i > -1; i--)
+                                list.remove(list.size() - 1);
+                            list.add(nerr.substring(1, nerr.indexOf(" ")));
+                            temp = "";
+                        }
+                        System.out.println("temp: " + temp);
+                        System.out.println("nerr: " + nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1));
                     }
+                }
+                if (s.getPos().getStringForm() == "Verb") {
+                    indexVerb = count;
+                }
+                if (s.getPos().getStringForm() == "Punc") {
+                    hasPunc = true;
                 }
                 if (s.getPos().getStringForm() == "Verb" && !hasPNoun) {//Pron,Pers suan verb e baiyor tum cumlede aramasi lazim
                     switch (getPersonTag(s.getMorphemes())) {
@@ -355,19 +332,7 @@ public class T2P {
                 }
                 count++;
             }
-            System.out.println(indexx);
-            if (!indexx.isEmpty()) {
-               /* for(int i=0;i<indexx.size();i++){
-                    if(indexx.get(i).split(",")[1]==indexx.get(i+1).split(",")[1]){
-
-                    }
-                }*/
-                list.set(indexx.get(0), tempNer);
-                for (int i = 1; i < indexx.size(); i++) {
-                    list.remove(i);
-                }
-            }
-            if (hasTamlama && !hasPlural) {
+            if (hasTamlama && !hasPlural && !hasTamlamaInNer) {
                 replace = getTamlama(str);
                 System.out.println(replace);
                 String[] split = replace.split("-");
@@ -387,26 +352,42 @@ public class T2P {
                 //list.add(0, "P");
                 hasPlural = false;
             }
-
             //TODO this
-            if (hasPlural && hasTamlama) {
+            if (hasPlural && hasTamlama) {//pron elenıyor onu kontrol et
+                replace = getTamlama(str);
+                System.out.println(replace);
+                String[] split = replace.split("-");
+                String[] tamlamaIndexes = split[0].split(",");
+                replaceCogul = getPluralWord(str);
+                System.out.println("GIRDI");
+                String[] split2 = replaceCogul.split(",");
+                if (list.get(0).contains("Pron"))
+                    for (int k = 0; k < tamlamaIndexes.length; k++) {
+                        tamlamaIndexes[k] = Integer.toString(Integer.parseInt(tamlamaIndexes[k]) + 1);
+                    }
+                list.set(Integer.parseInt(tamlamaIndexes[0]), "T-" + split[1]);
+                for (int i = 1; i < tamlamaIndexes.length; i++) {
+                    list.remove(Integer.parseInt(tamlamaIndexes[i]));
+                    removed++;
+                }
+                if (!ContainsAny(tamlamaIndexes, split2)) {
+                    int index = Integer.parseInt(split2[0]);
+                    if (list.get(0).contains("Pron"))
+                        index++;
+                    if (Integer.parseInt(tamlamaIndexes[0]) < Integer.parseInt(split2[0])) {
+                        list.set(index - removed, "P-" + split2[1]);
+                        System.out.println("KUCUK");
+                    } else {
+                        list.set(index, "P-" + split2[1]);
+                    }
+                }
+                hasTamlama = false;
+                hasPlural = false;
                 //plural tamlama harici biyerdeyse plurali al stringe tamlama listine ekle
                 //else tamlama listi al sadece
             }
 
-           /* if (!ner.isEmpty()) {
-                String search = "";
-                for (String s : ner) {
-                    search = s.substring(s.indexOf(" "), s.length() - 1);
-
-                    for (String ss : list) {
-                        if (ss.contains(search)) {
-                            list.set(list.indexOf(search), s.substring(1, s.indexOf(" ") + 1));
-                        }
-                    }
-                }
-            }*/
-            System.out.println(originalSentence);
+            System.out.println(originalSentence.trim());
             System.out.println(ner);
             System.out.println(list);
             out.add(list);
@@ -428,10 +409,10 @@ public class T2P {
 
         for (List<String> strList : zemberekPos) {
             for (String s : strList) {
-                if (s.contains("+")) {//tamlama case
+                if (s.contains("+") && !s.equals("+")) {//tamlama case
                     String[] split = s.split("\\+");
                     for (String str : split) {
-                        pos = str.substring(s.indexOf(":") + 1);
+                        pos = str.substring(str.indexOf(":") + 1);
                         for (WordPos wordPos : WordPos.values()) {
                             try {
                                 if (wordPos.name().equals(pos)) {//== operator avoids null,equals throw nullpointerexception
@@ -441,9 +422,10 @@ public class T2P {
                             } catch (NullPointerException np) {
                             }
                         }
-                        temp += str.substring(0, s.indexOf(":") + 1) + pos + "+";
+                        temp += str.substring(0, str.indexOf(":") + 1) + pos + "+";
                     }
                     list.add(temp.substring(0, temp.length() - 1));
+                    temp = "";
                     continue;
                 }
                 pos = s.substring(s.indexOf(":") + 1);
@@ -482,7 +464,18 @@ public class T2P {
         try {
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(URL, USER, PASS);
+            //execute
             stmt = conn.createStatement();
+
+//            -Kelimeler ve POSları arrayda sırayla gelmiştir.
+//            -Her lemma için bir synonym, hypernym, hyponym arama fonksiyonu gerekiyor.
+//                -En düşük sense synset'inden 5 fazlasına kadar.
+//                -
+//            -Kalan nounların, cümle içi noun ve verb'lerlen birleşip aranması.
+//            -0. eleman P- ise çoğul T- ise tamlama
+//            -
+
+
 
             for (String templateText : text) {
                 if (templateText.equals(",") || templateText.equals("+")) {
@@ -722,7 +715,7 @@ public class T2P {
             String JointMember_QueryPart = "";
             for (i = 0; i < combination.size(); i++) {
                 SELECT_QueryPart += ", " + Data_objectName[i] + ".lemma";
-                FROM_QueryPart += " texttopicto " + Data_objectName[i];
+                FROM_QueryPart += " text2pic " + Data_objectName[i];
                 if (combination.size() - 1 != i) {
                     FROM_QueryPart += ", ";
                 }
@@ -739,6 +732,91 @@ public class T2P {
         }
         return queries;
     }
+    static public String removeLemmaPos(String morfic, String part) {
+        if (part.equals("pos")) {
+            return morfic.substring(0, morfic.indexOf(":"));
+        } else if (part.equals("lemma")) {
+            return morfic.substring(morfic.indexOf(":") + 1);
+        } else {
+            return morfic;
+        }
+    }
+
+    public static void helper(List<List<String>> combinations, String data[], int startPoint, List<String> lemmas, int index) {
+        String[] datas = data.clone();
+        if (index == datas.length) {
+            List<String> combination = Arrays.asList(datas);
+            combinations.add(combination);
+        } else if (startPoint <= lemmas.size() - 1) {
+            datas[index] = lemmas.get(startPoint);
+            helper(combinations, datas, startPoint + 1, lemmas, index + 1);
+            helper(combinations, datas, startPoint + 1, lemmas, index);
+        }
+    }
+
+    public static List<List<String>> generate(List<String> lemmas, int r) {
+        List<List<String>> combinations = new ArrayList<>();
+        helper(combinations, new String[r], 0, lemmas, 0);
+        return combinations;
+    }
+//
+//    private static void helper(List<int[]> combinations, int data[], int start, int end, int index) {
+//        if (index == data.length) {
+//            int[] combination = data.clone();
+//            combinations.add(combination);
+//        } else if (start <= end) {
+//            data[index] = start;
+//            helper(combinations, data, start + 1, end, index + 1);
+//            helper(combinations, data, start + 1, end, index);
+//        }
+//    }
+//
+//    public static List<int[]> generate(int n, int r) {
+//        List<int[]> combinations = new ArrayList<>();
+//        helper(combinations, new int[r], 0, n-1, 0);
+//        return combinations;
+//    }
+
+    //    public static List<String> combinator(List<String> lemmas){
+//        int i, j;
+//        List<String> tempList = new ArrayList<>();
+//        List<String> combinedList = new ArrayList<>();
+//
+//        // 1 2 3 | 1 3 | 1 2 | 2 3 | 1 | 2 | 3
+//
+//        for (i = lemmas.size(); i == 0 ; i--){
+//            for (j = 0;j<i;j++)
+//            tempList.add(lemmas.get(j));
+//        }
+//
+//        return combinedList;
+//    }
+//    private static void multiply(List<List<String>> factors, List<String> current, List<List<String>> results) {
+//        if (current.size() >= factors.size()) {
+//            // Don't really need to make a deeper copy with String values
+//            // but might as well in case we change types later.
+//            List<String> result = new ArrayList<>();
+//            for (String s : current) {
+//                result.add(new String(s));
+//            }
+//            results.add(result);
+//
+//            return;
+//        }
+//
+//        int currentIndex = current.size();
+//        for (String s : factors.get(currentIndex)) {
+//            current.add(s);
+//            multiply(factors, current, results);
+//            current.remove(currentIndex);
+//        }
+//    }
+//
+//    private static List<List<String>> multiply(List<List<String>> factors) {
+//        List<List<String>> results = new ArrayList<>();
+//        multiply(factors, new ArrayList<String>(), results);
+//        return results;
+//    }
 
     public static void printSynSet(SynSet SynSetPrint) {
         int i;
@@ -1017,12 +1095,12 @@ public class T2P {
                 strBuild.append(splits[0].substring(0, splits[0].indexOf(":")));
                 for (String str : splits) {
                     if (str.contains(pluralTag) && str.contains(":")) {
-                        String a = str.substring(0, str.indexOf(":"));
+                        String a = str.substring(0, str.indexOf(":") + 1) + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]"));
                         strBuild.append(a);
                         break;
                     }
                 }
-                strBuild.append("-" + s.formatLexical().substring(1, s.formatLexical().indexOf(":")) + ":" + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]")));
+                strBuild.append("+" + s.formatLexical().substring(1, s.formatLexical().indexOf(":")) + ":" + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]")));
                 strBuild.insert(0, count + ",");
                 plural = strBuild.toString();
                 list.remove(list.size() - 1);
@@ -1189,91 +1267,13 @@ public class T2P {
         return posTag;
     }//morphList yerine String yap
 
-    static public String removeLemmaPos(String morfic, String part) {
-        if (part.equals("pos")) {
-            return morfic.substring(0, morfic.indexOf(":"));
-        } else if (part.equals("lemma")) {
-            return morfic.substring(morfic.indexOf(":") + 1);
-        } else {
-            return morfic;
+    static public boolean ContainsAny(String[] search, String[] target) {
+        for (int i = 0; i < search.length; i++) {
+            for (int j = 0; j < target.length; j++) {
+                if (search[i] == target[j])
+                    return true;
+            }
         }
+        return false;
     }
-
-    public static void helper(List<List<String>> combinations, String data[], int startPoint, List<String> lemmas, int index) {
-        String[] datas = data.clone();
-        if (index == datas.length) {
-            List<String> combination = Arrays.asList(datas);
-            combinations.add(combination);
-        } else if (startPoint <= lemmas.size() - 1) {
-            datas[index] = lemmas.get(startPoint);
-            helper(combinations, datas, startPoint + 1, lemmas, index + 1);
-            helper(combinations, datas, startPoint + 1, lemmas, index);
-        }
-    }
-
-    public static List<List<String>> generate(List<String> lemmas, int r) {
-        List<List<String>> combinations = new ArrayList<>();
-        helper(combinations, new String[r], 0, lemmas, 0);
-        return combinations;
-    }
-
-//
-//    private static void helper(List<int[]> combinations, int data[], int start, int end, int index) {
-//        if (index == data.length) {
-//            int[] combination = data.clone();
-//            combinations.add(combination);
-//        } else if (start <= end) {
-//            data[index] = start;
-//            helper(combinations, data, start + 1, end, index + 1);
-//            helper(combinations, data, start + 1, end, index);
-//        }
-//    }
-//
-//    public static List<int[]> generate(int n, int r) {
-//        List<int[]> combinations = new ArrayList<>();
-//        helper(combinations, new int[r], 0, n-1, 0);
-//        return combinations;
-//    }
-
-//    public static List<String> combinator(List<String> lemmas){
-//        int i, j;
-//        List<String> tempList = new ArrayList<>();
-//        List<String> combinedList = new ArrayList<>();
-//
-//        // 1 2 3 | 1 3 | 1 2 | 2 3 | 1 | 2 | 3
-//
-//        for (i = lemmas.size(); i == 0 ; i--){
-//            for (j = 0;j<i;j++)
-//            tempList.add(lemmas.get(j));
-//        }
-//
-//        return combinedList;
-//    }
-//    private static void multiply(List<List<String>> factors, List<String> current, List<List<String>> results) {
-//        if (current.size() >= factors.size()) {
-//            // Don't really need to make a deeper copy with String values
-//            // but might as well in case we change types later.
-//            List<String> result = new ArrayList<>();
-//            for (String s : current) {
-//                result.add(new String(s));
-//            }
-//            results.add(result);
-//
-//            return;
-//        }
-//
-//        int currentIndex = current.size();
-//        for (String s : factors.get(currentIndex)) {
-//            current.add(s);
-//            multiply(factors, current, results);
-//            current.remove(currentIndex);
-//        }
-//    }
-//
-//    private static List<List<String>> multiply(List<List<String>> factors) {
-//        List<List<String>> results = new ArrayList<>();
-//        multiply(factors, new ArrayList<String>(), results);
-//        return results;
-//    }
-
 }
