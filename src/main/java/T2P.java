@@ -3,17 +3,26 @@
 // check more info here : https://stackoverflow.com/questions/11677572/dealing-with-xerces-hell-in-java-maven
 
 //FIXME
+// - SyntaxAnalysis
 // - turkishmorptactics.a1pl vs
+// - GET SPECIAL SENTENCE CONDITIONS IN ONE FUNCTION.
+// - FUNCTION RETURN TYPE LARI DUZELT.
 // - STOPWORDS FILTER.
 // - function return type list -> String(containing replaced part and index(list))
 // - DEVRIK CUMLE -> verbi en sona at ( MAKE LINKEDLIST MAYBE ? -> YOU CAN TRAVERSE THE WORDS CHECK IF THE VERB IS IN THE END ? )
+// - PLURAL AND TAMLAMA AT THE SAME TIME
 // - NERTEST GELISTIR + HER CUMLE NERE GIRMESIN
 // - COGUL SUAN SADECE CUMLEDE 1 TANE COGUL VARSA CALISIYO DUZELT
-// - Bazı Pos enumlar eksik
-// - Determiner kalkıyor.
+// -
+// - DO ACTUAL SIMPLIFICATION WITH SYNTAX ANALYSIS(FIILIMSI DURMUNU EKLE)
+// - EXTRACT VERBPHRASES(VB) ?
+// - test.mco gelistir -> MaltOptimizer,check algorithms,ml
 
 import Dictionary.Pos;
+import Corpus.*;
 import WordNet.*;
+import DependencyParser.*;
+
 import zemberek.core.turkish.PrimaryPos;
 import zemberek.morphology.TurkishMorphology;
 import zemberek.morphology.analysis.SentenceAnalysis;
@@ -38,10 +47,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.*;
+import zemberek.tokenization.TurkishTokenizer;
 
 import javax.swing.plaf.synth.SynthTextAreaUI;
 
 import static WordNet.SemanticRelationType.*;
+
+class Nodes {
+    int ID;
+    String FORM;
+    String LEMMA;
+    String UPOS;
+    String XPOS;
+    String FEATS;
+    String DEPREL;
+
+    Nodes Head;
+    Nodes Child;
+}
 
 public class T2P {
 
@@ -55,7 +78,7 @@ public class T2P {
 
     public enum WordPos {//word pos
 
-        Noun("NOUN"),
+        Noun("NOUN"),//guncelle  Noun(Pos.NOUN),
         NounTime("NOUN"),
         Adj("ADJECTIVE"),
         Adv("ADVERB"),
@@ -63,16 +86,15 @@ public class T2P {
         Interj("INTERJECTION"),
         Verb("VERB"),
         Pron("PRONOUN"),
+        PronQuant("PRONOUN"),
+        PronPers("PRONOUN"),
         Num("NOUN"),
         Det("NOUN"),
         PostP("NOUN"),
         Ques("NOUN"),
         Dup("NOUN"),
         Punc("NOUN"),
-        Unk("NOUN"),
-        PronPers("PRONOUN"),
-        PronQuant("PRONOUN"),
-        NounProp("NOUN");
+        Unk("NOUN");
 
         private String WordnetForm;
 
@@ -85,29 +107,32 @@ public class T2P {
         }
     }
 
-    static String URL = "jdbc:mysql://localhost/picto2text?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
+    static String URL = "jdbc:mysql://localhost/test?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
     static String USER = "root";
-    static String PASS = "248163264:Hakan";
+    static String PASS = "hakki1996";
     static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static String PICTO_FOLDER_PATH = "C:\\Users\\hakac\\T2P\\src\\main\\resources\\Pictograms";
-    static String TABLE_NAME = "texttopicto";
-    static String[] edats = {"gibi", "kadar", "icin", "dolayi", "oturu", "yalniz", "ancak", "tek", "uzere", "sanki", "diye",};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
+    static String PICTO_FOLDER_PATH = "C:\\Users\\haQQi\\Documents\\Projects\\T2P\\src\\main\\resources\\Pictograms";
+    static String TABLE_NAME = "text2pic";
+    static String[] edats = {"gibi", "kadar", "için", "dolayı", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye", "daha", "bir"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
     static int SYNSET_LIMIT = 5;
-// Emine ile Pınar sinemaya gitti. (”İle” yerine ”ve” gelebilir. → Bağlaç) » Bu çalışma ile sonuç alınmaz. (”İle” yerine ”ve” getirilemez. → Edat)
+
+    // Emine ile Pınar sinemaya gitti. (”İle” yerine ”ve” gelebilir. → Bağlaç) » Bu çalışma ile sonuç alınmaz. (”İle” yerine ”ve” getirilemez. → Edat)
 
     public static TurkishMorphology morphology = TurkishMorphology.createWithDefaults();
    /* public static TurkishMorphology morphology = TurkishMorphology.builder()
-            .setLexicon(RootLexicon.getDefault())
-            .ignoreDiacriticsInAnalysis()
+            .setLexicon(RootLexicon.getDefault())// lets you choose the lexicon
+            .ignoreDiacriticsInAnalysis()// ignores turkish special words(ğ -> g)
             .build();*/
 
     public static WordNet turkish = new WordNet();
+
 
     public static void main(String[] args) throws IOException {
 
         //named entity recognition(look NerTraining.java for more)
         //System.out.println(NerTraining.NER("Ali Kaan yarın Ayvalık Belediyesi'ne gidecek."));
         //System.out.println("Ayşe yarın İstanbul'a gidecek.");
+
 
         //linking
         //ArrayList<String> fileNamesTemp = new ArrayList<>(listAllFiles(PICTO_FOLDER_PATH));
@@ -162,7 +187,6 @@ public class T2P {
         //linkerSynsetPictogram(listAllFiles(PICTO_FOLDER_PATH));
 
     }
-
 
     @SuppressWarnings("Duplicates")
     static public List<String> SelectDB(List<String> text) {
@@ -398,7 +422,7 @@ public class T2P {
             String JointMember_QueryPart = "";
             for (i = 0; i < combination.size(); i++) {
                 SELECT_QueryPart += ", " + Data_objectName[i] + ".lemma";
-                FROM_QueryPart += " texttopicto " + Data_objectName[i];
+                FROM_QueryPart += " texttopicto " + Data_objectName[i];//use global variable TABLE_NAME
                 if (combination.size() - 1 != i) {
                     FROM_QueryPart += ", ";
                 }
@@ -444,8 +468,6 @@ public class T2P {
         }
     }
 
-
-
     static public void linkerSynsetPictogram(ArrayList<String> fileNames) {
         int i, j, k;
 
@@ -472,7 +494,7 @@ public class T2P {
                     fileNameSplitName = deletePossession(fileNames.get(i).replace(".png", ""));
                     for (j = 0; j < fileNameSplitName.size(); j++) {
                         SynSets = turkish.getSynSetsWithLiteral(fileNameSplitName.get(j).substring(0, fileNameSplitName.get(j).indexOf(":")));
-                        if (!SynSets.isEmpty()) { 
+                        if (!SynSets.isEmpty()) {
                             for (k = 0; k < SynSets.size(); k++) {
                                 sqlQuery_Insert_2 = " VALUES ('" + SynSets.get(k).getId() + "', '" + fileNameSplitName.get(j).substring(0, fileNameSplitName.get(j).indexOf(":")) + "', '" + fileNames.get(i) + "','" + SynSets.get(k).getPos().toString() + "')";
                                 stmt.executeUpdate(sqlQuery_Insert_1 + sqlQuery_Insert_2);
@@ -529,20 +551,22 @@ public class T2P {
         }
         return fileNames;
     }
-
-
-
+    @SuppressWarnings("Duplicates")
     public static List<List<String>> Input2Picto(String input) throws IOException {
+
+        //object[] ->1.morphed,2.lex,3.index,4.
 
         //sentence extractor ()
         TurkishSentenceExtractor extractor = TurkishSentenceExtractor.DEFAULT;
 
+        boolean isBasitCumle = true;//true -> Basit cumle(only 1 verb) | false -> Bilesik Cumle(at least 2 verb)
         boolean hasPNoun = false;
         boolean hasTamlama = false;
         boolean hasPlural = false;
         boolean hasTamlamaInNer = false;
         boolean hasPunc = false;
         int indexVerb = 0;
+        int verbCount = 0;
         List<String> sentences = extractor.fromParagraph(input);
         List<List<String>> out = new ArrayList<List<String>>();
         List<List<String>> original = new ArrayList<List<String>>();
@@ -551,15 +575,6 @@ public class T2P {
         int count = 0;
         boolean isPrevNoun = false;
 
-
-        // every word of each sentence
-        /*for (int i = 0; i < sentences.size(); i++) {
-            List<String> originalSentence = new ArrayList<String>();
-            for (int j = 0; j < sentences.get(i).split("\\s+").length; j++) {
-                originalSentence.add(sentences.get(i).split("\\s+")[j]);
-            }
-            original.add(originalSentence);
-        }*/
 
         for (String str : sentences) {
             ArrayList<String> list = new ArrayList<String>();
@@ -578,16 +593,17 @@ public class T2P {
             for (int i = 0; i < ner.size(); i++) {
                 ner.set(i, ner.get(i).replaceAll("\'", ""));//replaceAll("[^a-zA-Z ]", "").toLowerCase());
             }
-            System.out.println(ner);
 
             List<WordAnalysis> analysis = morphology.analyzeSentence(str);
             SentenceAnalysis disambiguation = morphology.disambiguate(str, analysis);
             List<SingleAnalysis> bestAnalysis = disambiguation.bestAnalysis();
-            System.out.println(bestAnalysis.size());
+            //System.out.println(bestAnalysis.size());
+            String[] tokens = new String[bestAnalysis.size()];
 
             for (SingleAnalysis s : bestAnalysis) {
-
                 originalSentence += s.surfaceForm() + " ";
+
+                tokens[count] = Convert2Conll(s.formatLong(), s.formatMorphemesLexical(), s.surfaceForm(), count);
 
                 if (Arrays.asList(edats).contains(s.surfaceForm())) continue; //duzelt s.formatlexical
                 if (s.getPos().getStringForm() == "Conj") {
@@ -621,17 +637,17 @@ public class T2P {
                 list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));
                 for (String nerr : ner) {
                     if (StringUtils.equalsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {//CONTAINS AND EQUALS AYRI AYRI CONTAINS-> 2LI OZEL
-                        System.out.println("equals girdi");
+                        //System.out.println("equals girdi");
                         list.remove(list.size() - 1);
                         list.add(nerr.substring(1, nerr.indexOf(" ")));
                     } else if (StringUtils.containsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {//CONTAINS AND EQUALS AYRI AYRI CONTAINS-> 2LI OZEL
-                        System.out.println("contains girdi");
+                        //System.out.println("contains girdi");
                         if (!temp.trim().equals(s.surfaceForm()))
                             temp += s.surfaceForm() + " ";
                         if (StringUtils.equalsIgnoreCase(temp.trim(), nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1))) {
-                            System.out.println("hebele");
-                            System.out.println(Arrays.asList(indexess));
-                            System.out.println(count);
+                            //System.out.println("hebele");
+                            //System.out.println(Arrays.asList(indexess));
+                            //System.out.println(count);
                             if (ArrayUtils.contains(indexess, Integer.toString(count)))
                                 hasTamlamaInNer = true;
                             for (int i = StringUtils.countMatches(temp.trim(), " "); i > -1; i--)
@@ -639,12 +655,13 @@ public class T2P {
                             list.add(nerr.substring(1, nerr.indexOf(" ")));
                             temp = "";
                         }
-                        System.out.println("temp: " + temp);
-                        System.out.println("nerr: " + nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1));
+                        //System.out.println("temp: " + temp);
+                        //System.out.println("nerr: " + nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1));
                     }
                 }
                 if (s.getPos().getStringForm() == "Verb") {
                     indexVerb = count;
+                    verbCount++;
                 }
                 if (s.getPos().getStringForm() == "Punc") {
                     hasPunc = true;
@@ -675,17 +692,6 @@ public class T2P {
                             break;
                     }
                 }
-                /*if (!ner.isEmpty()) {
-                    String search = "";
-                    String target = s.surfaceForm();
-                    for (String sss : ner) {
-                        search = sss.substring(sss.indexOf(" "), sss.length() - 1).replace("\'", "");
-                        if (target.trim().equalsIgnoreCase(search.trim())) {
-                            list.remove(list.size() - 1);
-                            list.add(sss.substring(1, sss.indexOf(" ")));
-                        }
-                    }
-                }*/
                 switch (sentenceType) {
                     case Tamlama:
                         break;
@@ -700,9 +706,11 @@ public class T2P {
                 }
                 count++;
             }
+            if (verbCount > 1)
+                isBasitCumle = false;
+
             if (hasTamlama && !hasPlural && !hasTamlamaInNer) {
                 replace = getTamlama(str);
-                System.out.println(replace);
                 String[] split = replace.split("-");
                 String[] indexes = split[0].split(",");
                 list.set(Integer.parseInt(indexes[0]), "T-" + split[1]);
@@ -723,11 +731,11 @@ public class T2P {
             //TODO this
             if (hasPlural && hasTamlama) {//pron elenıyor onu kontrol et
                 replace = getTamlama(str);
-                System.out.println(replace);
+                //System.out.println(replace);
                 String[] split = replace.split("-");
                 String[] tamlamaIndexes = split[0].split(",");
                 replaceCogul = getPluralWord(str);
-                System.out.println("GIRDI");
+                //System.out.println("GIRDI");
                 String[] split2 = replaceCogul.split(",");
                 if (list.get(0).contains("Pron"))
                     for (int k = 0; k < tamlamaIndexes.length; k++) {
@@ -744,7 +752,7 @@ public class T2P {
                         index++;
                     if (Integer.parseInt(tamlamaIndexes[0]) < Integer.parseInt(split2[0])) {
                         list.set(index - removed, "P-" + split2[1]);
-                        System.out.println("KUCUK");
+                        //System.out.println("KUCUK");
                     } else {
                         list.set(index, "P-" + split2[1]);
                     }
@@ -753,29 +761,36 @@ public class T2P {
                 hasPlural = false;
                 //plural tamlama harici biyerdeyse plurali al stringe tamlama listine ekle
                 //else tamlama listi al sadece
+
             }
 
-            System.out.println(originalSentence.trim());
-            System.out.println(ner);
-            System.out.println(list);
+            System.out.println("input: "+ originalSentence.trim());
+            System.out.println("NER: " + ((!ner.isEmpty()) ? ner : "is empty"));
+            System.out.println("morphedList: "+list);
+            /*for (int i = 0; i < tokens.length; i++) {
+                System.out.println(tokens[i]);
+            }*/
+            System.out.println("Syntax analysis:");
+            DependencyParser.Parse(tokens);
+            //DependencyParser.main(tokens);
             out.add(list);
         }
         ConvertPostag(out);
         return out;
-
 
         //SelectDB(out, sentences);//3.parametre eklenebilir special cumleler(tamlama,cogul vs.)
         //0 -> original sentence,1->lemmazation
         //normal cumleler + tamlamali,cogullu vs cumleler olabilir
     }
 
-    //converts posTags Adj->ADJECTIVE
+    //converts posTags Zemberek->WordNet(Adj->ADJECTIVE)
     public static List<String> ConvertPostag(List<List<String>> zemberekPos) {
         String pos = "";
         String temp = "";
         List<String> list = new ArrayList<String>();
 
-        for (List<String> strList : zemberekPos) {
+        for (
+                List<String> strList : zemberekPos) {
             for (String s : strList) {
                 if (s.contains("+") && !s.equals("+")) {//tamlama case
                     String[] split = s.split("\\+");
@@ -812,10 +827,53 @@ public class T2P {
                 }
                 list.add(s.substring(0, s.indexOf(":") + 1) + pos);
             }
-            System.out.println(list);
+            System.out.println("Updated morphedList: " + list);
             //SelectDB(list);
         }
         return list;
+    }
+
+    //ONLY SUPPORTS BASIT CUMLE(1 FIILLI CUMLE) FOR NOW
+    public static String Convert2Conll(String morphed, String lexicalMorphes, String surface, int index) {
+        //Conll format
+        //ID FORM LEMMA UPOS XPOS FEATS(morph ekler) HEAD(head of the curr word) DEPREL(UD Relation to the head) DEPS(dependency graph) MISC(other)
+        //apart from ID use "_" if not available(unspecified)
+
+        String tokenized = "";
+
+        //getting rid of brackets
+        morphed = morphed.replace("[", "");
+        morphed = morphed.replace("]", "");
+        //"5\tyere\tyer\tNoun\tNoun\tA3sg|Dat";
+        //"7\t.\t.\tPunc\tPunc\t_";
+        String lexForm = morphed.split("\\s+")[0];
+        String suffixes = morphed.split("\\s+")[1];
+
+        int ID = index + 1;
+        String FORM = surface;
+        String LEMMA = StringUtils.split(suffixes, ":")[0];
+        String UPOS = lexForm.split(":")[1];
+        String XPOS = "";
+        String FEATS = "";
+        if (suffixes.contains("+")) {
+            XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("+"));
+        } else {
+            XPOS = suffixes.split(":")[1];
+        }
+        if (lexicalMorphes.contains("+")) {
+            FEATS = lexicalMorphes.substring(lexicalMorphes.indexOf("+") + 1).replaceAll("\\+", "|");
+        } else {
+            FEATS = "_";
+        }
+        if (UPOS.equals("Verb")) {
+            FEATS = "Pos|" + lexicalMorphes;
+        }
+        StringBuilder sb = new StringBuilder();
+        index++;
+        sb.append(ID + "\t" + FORM + "\t" + LEMMA + "\t" + UPOS + "\t" + XPOS + "\t" + FEATS);
+        tokenized = sb.toString();
+
+        return tokenized;
     }
 
     public static void printSynSet(SynSet SynSetPrint) {
@@ -858,6 +916,132 @@ public class T2P {
         }
     }
 
+    //todo deleteMorphTag(String input,String morphtag)
+    //todo  (cumle yerine kelime alabilir) + postagleri de al(baglancak synset sayisi azalmis olur(bi kelimenin hem noun hem hem verb hem adj butun synsetlerini almamis olur)),maybe input olarak morph tag de alabilir -(eklendi)BUTUN POSSESSION EKLERINI SIL(suan sadece p3sg siliyor.)
+    static public List<String> deletePossession(String input) {
+        TurkishMorphology morphology = TurkishMorphology.builder()
+                .setLexicon(RootLexicon.getDefault())
+                .ignoreDiacriticsInAnalysis()
+                .build();
+
+        List<String> list = new ArrayList<String>();
+        List<WordAnalysis> analysis = morphology.analyzeSentence(input);
+        SentenceAnalysis disambiguate = morphology.disambiguate(input, analysis);
+        disambiguate.bestAnalysis().forEach(s -> {//postagleri ekle
+            //[kedi:Noun] kedi:Noun+ler:A3pl+i:P3sg  ekleri ayir(+...+) -> p3sg yoksa && : varsa +...: arasini al
+            //[kedi:Noun] kedi:Noun+ler:A3pl+i:P3pl
+            //enerji icecegi->i=p3sg , enerji icecekleri->i=Acc
+            if (ContainsPossession(s.getMorphemes())) {//Possession varsa eki sil list e ekle
+                String possessionTag = getPossessionTag(s.getMorphemes());
+                if (StringUtils.countMatches(s.formatLong().substring(0, s.formatLong().indexOf(possessionTag) - 1), ':') <= 2)//Possessiondan once baska ek yoksa kokunu al yumusama sertlesme gibi bozulmalarin onune gecer(kitab,kapag)
+                    list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));//:
+                else {
+                    String[] splits = StringUtils.split(s.formatLong().substring(s.formatLong().indexOf(' ') + 1), '+');
+                    StringBuilder strBuild = new StringBuilder();
+                    for (String str : splits) {
+                        if (!str.contains(possessionTag) && str.contains(":")) {
+                            String a = str.substring(0, str.indexOf(":"));
+                            strBuild.append(a);
+                        }
+                    }
+                    list.add(strBuild.toString() + ":" + s.getPos().getStringForm());
+                }
+            } else {//Possession yoksa direk ekle (belki ilerde baska tur eklerde sorun cikarabilir)
+                list.add(s.surfaceForm() + ":" + s.getPos().getStringForm());
+            }
+        });
+        return list;
+    }
+
+    static public String getPossessionTag(List<Morpheme> morphList) {
+        String posTag = "";
+        String[] possession = {"P1sg", "P2sg", "P3sg", "P1pl", "P2pl", "P3pl"};//"Acc"
+
+        for (int i = 0; i < possession.length; i++) {
+            for (int j = 0; j < morphList.size(); j++) {
+                if (possession[i] == morphList.get(j).id) {
+                    posTag = possession[i];
+                    return posTag;
+                }
+            }
+        }
+        return posTag;
+    }//morphList yerine String yap
+
+    static public String getPluralTag(List<Morpheme> morphList) {
+        String posTag = "";
+        String[] plural = {"A1pl", "A2pl", "A3pl"};
+
+        for (int i = 0; i < plural.length; i++) {
+            for (int j = 0; j < morphList.size(); j++) {
+                if (plural[i] == morphList.get(j).id) {
+                    posTag = plural[i];
+                    return posTag;
+                }
+            }
+        }
+        return posTag;
+    }
+
+    static public boolean ContainsPlural(List<Morpheme> morphList) {
+        if (getPluralTag(morphList) == "")
+            return false;
+        return true;
+    }
+
+    //s.containsMorpheme(TurkishMorphotactics.a1pl)
+    static public String getPluralWord(String sentence) {
+        String plural = "";
+        String pluralTag = "";
+        List<String> list = new ArrayList<String>();
+        int count = 0;
+
+        List<WordAnalysis> analysis = morphology.analyzeSentence(sentence);
+        SentenceAnalysis disambiguate = morphology.disambiguate(sentence, analysis);
+
+        for (SingleAnalysis s : disambiguate.bestAnalysis()) {
+            //System.out.println(s.formatLong());
+            list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));
+            System.out.println(s.getPos().getStringForm());
+            if (ContainsPlural(s.getMorphemes()) && !s.getPos().getStringForm().equals("Verb")) {
+                pluralTag = getPluralTag(s.getMorphemes());
+                String[] splits = StringUtils.split(s.formatLong().substring(s.formatLong().indexOf(' ') + 1), '+');
+                StringBuilder strBuild = new StringBuilder();
+                strBuild.append(splits[0].substring(0, splits[0].indexOf(":")));
+                for (String str : splits) {
+                    if (str.contains(pluralTag) && str.contains(":")) {
+                        String a = str.substring(0, str.indexOf(":") + 1) + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]"));
+                        strBuild.append(a);
+                        break;
+                    }
+                }
+                strBuild.append("+" + s.formatLexical().substring(1, s.formatLexical().indexOf(":")) + ":" + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]")));
+                strBuild.insert(0, count + ",");
+                plural = strBuild.toString();
+                list.remove(list.size() - 1);
+                list.add(plural);
+                //System.out.println(plural);
+                //return plural;
+            }
+            if (s.getPos().getStringForm() == "Conj") {
+                list.remove(list.size() - 1);
+                list.add("+");
+            }
+            count++;
+        }
+        //check if pluralexists
+        list.add(0, "P");
+        //System.out.println(list);
+        //System.out.println(plural);
+        return plural;
+    }
+
+    static public boolean ContainsPossession(List<Morpheme> morphList) {
+        if (getPossessionTag(morphList) == "")
+            return false;
+        return true;
+    }
+
     //2+ isimli tamlama yoksa last int i kaldir
     static public String getTamlama(String sentence) {
         List<String> list = new ArrayList<String>();
@@ -872,11 +1056,11 @@ public class T2P {
         for (SingleAnalysis s : disambiguate.bestAnalysis()) {
             list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));
             temp = s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]"));
-            if (temp.contains("Noun") && s.getEnding().isEmpty()) {
+            if (temp.contains("Noun") && s.getEnding().isEmpty() && !temp.contains("Prop")) {
                 isPrevNoun = true;
                 temp2 = s.formatLexical().substring(1, s.formatLexical().indexOf("]"));
             }
-            if (temp.contains("Noun") && ContainsPossession(s.getMorphemes()) && isPrevNoun) {
+            if (temp.contains("Noun") && ContainsPossession(s.getMorphemes()) && isPrevNoun && !temp.contains("Prop")) {
                 temp2 = temp2 + "+" + s.formatLexical().substring(1, s.formatLexical().indexOf("]"));
                 str = Integer.toString(count - 1) + "," + Integer.toString(count) + "-" + temp2;
                 tag = "T-" + temp2;
@@ -889,11 +1073,11 @@ public class T2P {
             count++;
         }
         //check if tamlama exists
-        System.out.println(list);
+        //System.out.println(list);
         for (String s : list) {
             if (s.indexOf("T-") > -1) {
-                for (String strr : s.substring(2).split("\\+"))
-                    System.out.println(strr.substring(0, strr.indexOf(":")));
+                /*for (String strr : s.substring(2).split("\\+"))
+                    System.out.println(strr.substring(0, strr.indexOf(":")));*/
             }
         }
 
@@ -985,130 +1169,4 @@ public class T2P {
         }
         return false;
     }
-
-    //todo  (cumle yerine kelime alabilir) + postagleri de al(baglancak synset sayisi azalmis olur(bi kelimenin hem noun hem hem verb hem adj butun synsetlerini almamis olur)),maybe input olarak morph tag de alabilir -(eklendi)BUTUN POSSESSION EKLERINI SIL(suan sadece p3sg siliyor.)
-    static public List<String> deletePossession(String input) {
-        TurkishMorphology morphology = TurkishMorphology.builder()
-                .setLexicon(RootLexicon.getDefault())
-                .ignoreDiacriticsInAnalysis()
-                .build();
-
-        List<String> list = new ArrayList<String>();
-        List<WordAnalysis> analysis = morphology.analyzeSentence(input);
-        SentenceAnalysis disambiguate = morphology.disambiguate(input, analysis);
-        disambiguate.bestAnalysis().forEach(s -> {//postagleri ekle
-            //[kedi:Noun] kedi:Noun+ler:A3pl+i:P3sg  ekleri ayir(+...+) -> p3sg yoksa && : varsa +...: arasini al
-            //[kedi:Noun] kedi:Noun+ler:A3pl+i:P3pl
-            //enerji icecegi->i=p3sg , enerji icecekleri->i=Acc
-            if (ContainsPossession(s.getMorphemes())) {//Possession varsa eki sil list e ekle
-                String possessionTag = getPossessionTag(s.getMorphemes());
-                if (StringUtils.countMatches(s.formatLong().substring(0, s.formatLong().indexOf(possessionTag) - 1), ':') <= 2)//Possessiondan once baska ek yoksa kokunu al yumusama sertlesme gibi bozulmalarin onune gecer(kitab,kapag)
-                    list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));//:
-                else {
-                    String[] splits = StringUtils.split(s.formatLong().substring(s.formatLong().indexOf(' ') + 1), '+');
-                    StringBuilder strBuild = new StringBuilder();
-                    for (String str : splits) {
-                        if (!str.contains(possessionTag) && str.contains(":")) {
-                            String a = str.substring(0, str.indexOf(":"));
-                            strBuild.append(a);
-                        }
-                    }
-                    list.add(strBuild.toString() + ":" + s.getPos().getStringForm());
-                }
-            } else {//Possession yoksa direk ekle (belki ilerde baska tur eklerde sorun cikarabilir)
-                list.add(s.surfaceForm() + ":" + s.getPos().getStringForm());
-            }
-        });
-        return list;
-    }
-
-    static public String getPossessionTag(List<Morpheme> morphList) {
-        String posTag = "";
-        String[] possession = {"P1sg", "P2sg", "P3sg", "P1pl", "P2pl", "P3pl"};//"Acc"
-
-        for (int i = 0; i < possession.length; i++) {
-            for (int j = 0; j < morphList.size(); j++) {
-                if (possession[i] == morphList.get(j).id) {
-                    posTag = possession[i];
-                    return posTag;
-                }
-            }
-        }
-        return posTag;
-    }//morphList yerine String yap
-
-    static public String getPluralTag(List<Morpheme> morphList) {
-        String posTag = "";
-        String[] plural = {"A1pl", "A2pl", "A3pl"};
-
-        for (int i = 0; i < plural.length; i++) {
-            for (int j = 0; j < morphList.size(); j++) {
-                if (plural[i] == morphList.get(j).id) {
-                    posTag = plural[i];
-                    return posTag;
-                }
-            }
-        }
-        return posTag;
-    }
-
-    static public boolean ContainsPlural(List<Morpheme> morphList) {
-        if (getPluralTag(morphList) == "")
-            return false;
-        return true;
-    }
-
-    //s.containsMorpheme(TurkishMorphotactics.a1pl)
-    static public String getPluralWord(String sentence) {
-        String plural = "";
-        String pluralTag = "";
-        List<String> list = new ArrayList<String>();
-        int count = 0;
-
-        List<WordAnalysis> analysis = morphology.analyzeSentence(sentence);
-        SentenceAnalysis disambiguate = morphology.disambiguate(sentence, analysis);
-
-        for (SingleAnalysis s : disambiguate.bestAnalysis()) {
-            System.out.println(s.formatLong());
-            list.add(s.formatLexical().substring(1, s.formatLexical().indexOf("]")));
-            System.out.println(s.getPos().getStringForm());
-            if (ContainsPlural(s.getMorphemes()) && !s.getPos().getStringForm().equals("Verb")) {
-                pluralTag = getPluralTag(s.getMorphemes());
-                String[] splits = StringUtils.split(s.formatLong().substring(s.formatLong().indexOf(' ') + 1), '+');
-                StringBuilder strBuild = new StringBuilder();
-                strBuild.append(splits[0].substring(0, splits[0].indexOf(":")));
-                for (String str : splits) {
-                    if (str.contains(pluralTag) && str.contains(":")) {
-                        String a = str.substring(0, str.indexOf(":") + 1) + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]"));
-                        strBuild.append(a);
-                        break;
-                    }
-                }
-                strBuild.append("+" + s.formatLexical().substring(1, s.formatLexical().indexOf(":")) + ":" + s.formatLexical().substring(s.formatLexical().indexOf(":") + 1, s.formatLexical().indexOf("]")));
-                strBuild.insert(0, count + ",");
-                plural = strBuild.toString();
-                list.remove(list.size() - 1);
-                list.add(plural);
-                //System.out.println(plural);
-                //return plural;
-            }
-            if (s.getPos().getStringForm() == "Conj") {
-                list.remove(list.size() - 1);
-                list.add("+");
-            }
-            count++;
-        }
-        //check if pluralexists
-        list.add(0, "P");
-        System.out.println(list);
-        System.out.println(plural);
-        return plural;
-    }
-
-    static public boolean ContainsPossession(List<Morpheme> morphList) {
-        if (getPossessionTag(morphList) == "")
-            return false;
-        return true;
-    }
-
 }
