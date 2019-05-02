@@ -30,11 +30,11 @@ public class NerTraining {
 
         // Training occurs here. Result is a PerceptronNer instance.
         // There will be 7 iterations with 0.1 learning rate.
-        PerceptronNer trainner = new PerceptronNerTrainer(morphology)
+        PerceptronNer trainer = new PerceptronNerTrainer(morphology)
                 .train(trainingSet, testSet, 13, 0.1f);
 
         Files.createDirectories(modelRoot);
-        trainner.saveModelAsText(modelRoot);
+        trainer.saveModelAsText(modelRoot);
 
     }
 

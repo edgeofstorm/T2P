@@ -33,28 +33,25 @@ import static java.awt.Image.SCALE_SMOOTH;
 // - consider JTable
 // - ONE SCROLLPANE thus one list for each sentence maybe try it
 // - search for multiple scroll panels
-// - 3 TANE CUMLE VARSA PANELI 3 E BOLUYO BUNUN YERINE HER CUMLE BELIRLI BIR SIZE DA ROW KAPLARSA RESIZE IMAGE OLAYI BITER.(PANELMAIN DECLARATION I CUMLEDEKI . COUNT SAYISINA GORE YAP)
+// - 3 TANE CUMLE VARSA PANELI 3 E BOLUYO BUNUN YERINE HER CUMLE BELIRLI BIR SIZE DA ROW KAPLARSA RESIZE IMAGE OLAYI BITER.(outputPanel DECLARATION I CUMLEDEKI . COUNT SAYISINA GORE YAP)
 // - SEARCH MIGLAYOUT, JAVAFX
+// - noktaya gore boluyo cumleleri onu duzelt
 
 public class Gui extends JPanel {//implements ActionListener
 
     private JFrame frame = new JFrame();
-    private ImageIcon imageIcon;
-    private JLabel label;
-    private JScrollPane scrollPane;
-    private JLabel row = new JLabel();
     private JButton buttonCevir;
     private JTextField textYazılan;
-    private Map<String, ImageIcon> imageMap = createImageMap(T2P.listAllFiles(T2P.PICTO_FOLDER_PATH).toArray(new String[0])); //final
-    private JPanel panelMain = new JPanel(new GridLayout(0, 1));
     private JPanel inputPanel;
-    private JPanel container;
+    private JPanel outputPanel = new JPanel(new GridLayout(0, 1));
 
+    private Map<String, ImageIcon> imageMap = createImageMap(T2P.listAllFiles(T2P.PICTO_FOLDER_PATH).toArray(new String[0])); //final
 
     public static List<List<String>> sentences = new ArrayList<List<String>>();
 
-    public class MarioListRenderer extends DefaultListCellRenderer {
+    public class PictoListRenderer extends DefaultListCellRenderer {
 
+        //personal choice of font
         Font font = new Font("helvitica", Font.BOLD, 24);
 
         @Override
@@ -62,39 +59,23 @@ public class Gui extends JPanel {//implements ActionListener
                 JList list, Object value, int index,
                 boolean isSelected, boolean cellHasFocus) {
 
+            //Get the JLabel (as JList component) and modify
             JLabel label = (JLabel) super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
 
-           /* BufferedImage img = null;
-            try {
-                img = ImageIO.read(new File("C:\\Users\\haQQi\\Desktop\\Projects\\deneme1\\src\\bandaj.png"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Image dimg = img.getScaledInstance(label.getWidth(), label.getHeight(),
-                    Image.SCALE_SMOOTH);
-            ImageIcon imageIcon = new ImageIcon(dimg);
-            label.setIcon(imageIcon);*/
-
-            //ImageIcon io=new ImageIcon(imageMap.get((String) value).getImage());
-            //label.setIcon(new StretchIcon(getClass().getResource("bandaj.png")));
+            //Get the icon from map
             label.setIcon(imageMap.get((String) value));
-            //label.setIcon(getClass().getResource("\\Pictograms\\"+s)).getImage().getScaledInstance(200, 200, SCALE_SMOOTH));
-            /*label.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    JLabel label=(JLabel) e.getComponent();
-                    Dimension size=label.getSize();
-                    Image resized = imageIcon.getImage().getScaledInstance(size.width,size.height, SCALE_SMOOTH);
-                    label.setIcon(new ImageIcon(resized));
-                    //super.componentResized(e);
-                }
-            });*/
-            //label.setIcon(new StretchIcon(imageMap.get((String) value).getImage()));
-            /*label.setHorizontalTextPosition(JLabel.RIGHT);
-            label.setFont(font);*/
-            label.setText("");
-            label.setIconTextGap(-200);
+
+            //Printing Text under pictogram
+            if (value == "nokta.png") {//discard "."
+                label.setText("");
+                label.setVerticalAlignment(JLabel.NORTH);
+            } else {
+                label.setText(((String) value).substring(0, ((String) value).indexOf(".")));
+                label.setHorizontalTextPosition(JLabel.CENTER);
+                label.setVerticalTextPosition(JLabel.BOTTOM);
+                label.setFont(font);
+            }
             return label;
         }
     }
@@ -103,286 +84,114 @@ public class Gui extends JPanel {//implements ActionListener
         Map<String, ImageIcon> map = new HashMap<>();
         for (String s : list) {
             map.put(s, new ImageIcon(new ImageIcon(
-                    //getClass().getResource(s)));
-                    getClass().getResource("\\Pictograms\\"+s)).getImage().getScaledInstance(200, 200, SCALE_SMOOTH)));
+                    //get the icon version of pictogram and map it to its name.
+                    getClass().getResource("\\Pictograms\\" + s)).getImage().getScaledInstance(200, 200, SCALE_SMOOTH)));
         }
-        //StretchIcon si=new StretchIcon(getClass().getResource("bandaj.png"));
+        //map<String,ImageIcon> is created like this ((String)"araba.png" , (ImageIcon)araba.png)
         return map;
     }
 
-    Gui(List<String> images) {
+    //StretchIcon si=new StretchIcon(getClass().getResource("bandaj.png"));
 
-        System.out.println(images);
-        String[] nameList = images.toArray(new String[0]);//{"acil durum hattı.png","bandaj.png","ejderha.png","enerji.png","diyet.png","doktor.png",".","elf.png"};
-        //List<List<String>> sentences=new ArrayList<List<String>>();
-        //imageMap = createImageMap(nameList);
-
-        /*int count = 0;
-        for (String s : images) {
-            if (s == ".")
-                count++;
-        }
-        for (int i = 0; i < count; i++) {
-            sentences.add(images.subList(0, images.indexOf(".")));
-            images = images.subList(images.indexOf(".") + 1, images.size());
-        }*/
-        /*for(List<String> sentence:sentences){
-            System.out.println(sentence);
-            String[] arr = sentence.toArray(new String[0]);
-            JList list = new JList(arr);
-            list.setCellRenderer(new MarioListRenderer());
-            list.setVisibleRowCount(1); //nokta sayisi
-            list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-
-            JScrollPane scroll = new JScrollPane(list);
-            //scroll.setPreferredSize(new Dimension(300, 400));
-            //scroll.setBackground(Color.GREEN);
-            //scroll.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
-
-            panelMain.add(scroll);
-        }*/
+    Gui() {
+        //input panel configuration
         inputPanel = new JPanel();
         inputPanel.setBackground(Color.cyan);
+        //generate and add button and textField to inputPanel
         buttonCevir = new JButton("Cevir");
+        textYazılan = new JTextField();
+        textYazılan.setPreferredSize(new Dimension(800, 30));
+        inputPanel.add(textYazılan);
+        inputPanel.add(buttonCevir);
+
+
         buttonCevir.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                panelMain.removeAll();
-                panelMain.revalidate();
-                panelMain.repaint();
+                //First clear everything from outputPanel
+                outputPanel.removeAll();
+                outputPanel.revalidate();
+                outputPanel.repaint();
+
+                //for keeping the received output from other classes
                 List<String> temp = new ArrayList<String>();
-               try {
-                    temp=T2P.SelectDB(T2P.ConvertPostag(T2P.Input2Picto(textYazılan.getText())));
+                //Main process(Getting input and sending it to other classes -> Receiving output)
+                try {
+                    temp = T2P.SelectDB(T2P.ConvertPostag(T2P.Input2Picto(textYazılan.getText())));
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                //temp.add("akvaryum.png");
-                //temp.add("ejderha.png");
-                //temp.add("enerji.png");
-                if(!temp.isEmpty() && temp.get(temp.size()-1)!="nokta.png")
+
+                //add "." at the end of list if it lacks punctuation at the end of input
+                if (!temp.isEmpty() && temp.get(temp.size() - 1) != "nokta.png")
                     temp.add("nokta.png");
 
-                //imageMap=createImageMap(temp.toArray(new String[0]));
-                System.out.println(temp);
+                //keep the "." count (for splitting)
                 int count = 0;
                 for (String s : temp) {
                     if (s == "nokta.png")
                         count++;
                 }
-                for(int i =0;i<count;i++){
-                    sentences.add(temp.subList(0,temp.indexOf("nokta.png")+1));
-                    temp=temp.subList(temp.indexOf("nokta.png")+1,temp.size());
+
+                //split the received output into sentences using punctuations
+                for (int i = 0; i < count; i++) {
+                    sentences.add(temp.subList(0, temp.indexOf("nokta.png") + 1));
+                    temp = temp.subList(temp.indexOf("nokta.png") + 1, temp.size());
                 }
-                System.out.println("sentences : "+sentences);
+
+                //iterate through all sentences
                 for (List<String> sentence : sentences) {
-                    System.out.println(sentence);
+                    //construct JList from output
                     String[] arr = sentence.toArray(new String[0]);
                     JList list = new JList(arr);
-                    list.setCellRenderer(new MarioListRenderer());
-                    list.setVisibleRowCount(1); //nokta sayisi
+
+                    //call the modified cell renderer for list(every element of list is modified)
+                    list.setCellRenderer(new PictoListRenderer());
+
+                    //one sentence for one row
+                    list.setVisibleRowCount(1);
+
+                    //display list elements horizontally
                     list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 
+                    //in case if a sentence is too long display it in a scrollable container
                     JScrollPane scroll = new JScrollPane(list);
-                    //scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-                    //scroll.setPreferredSize(new Dimension(300, 400));
-                    //scroll.setBackground(Color.GREEN);
-                    //scroll.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
 
-                    /*JLabel test = new JLabel(new StretchIcon(getClass().getResource("bandaj.png")));
-                    scroll.add(test);*/
-                    panelMain.add(scroll);
+                    //finally add scrollable pane to outputPanel
+                    outputPanel.add(scroll);
+                    //repeat the process for every sentence
                 }
-                panelMain.setVisible(true);
+                //show the output panel after button clicked and actions are performed
+                outputPanel.setVisible(true);
+
                 //clear everything
                 temp.clear();
                 sentences.clear();
-                /*frame.revalidate();
-                frame.repaint();*/
             }
         });
-        textYazılan = new JTextField();
-        textYazılan.setPreferredSize(new Dimension(800, 30));
-        inputPanel.add(textYazılan);
-        inputPanel.add(buttonCevir);
-        /*panelMain.add(textYazılan);
-        panelMain.add(buttonCevir);*/
 
-        //container.add(panelMain);
-        //container.add(inputPanel,BorderLayout.SOUTH);
-        //JScrollPane scrPane = new JScrollPane(container);
-        //frame.add(scrPane);
 
-        /*JLabel test=new JLabel(new StretchIcon(getClass().getResource("bandaj.png")));
-        panelMain.add(test);*/
-        frame.add(panelMain);
-        panelMain.setVisible(false);
-        frame.add(inputPanel, BorderLayout.SOUTH);
+        //frame configuration
+        frame.add(outputPanel);//put outputpanel in frame
+        outputPanel.setVisible(false);//hide outputPanel at first(before button click)
+        frame.add(inputPanel, BorderLayout.SOUTH);//put the input panel at the bottom
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 800);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        //frame.pack();
+        frame.setSize(1000, 800);//Default size of GUI
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);//Start in fullscreen
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
-       /* int count=0;
-        int temp=0;
-        int highest=0;
-        for (String image : images) {
-            temp++;
-            if(image=="."){
-                highest=temp;
-                temp=0;
-                count++;
-            }
-        }*/
-
-        /*setLayout(new FlowLayout());
-        //setLayout(new GridBagLayout(count,highest));
-        //setLayout(new MigLayout("fillx", "[right]rel[grow,fill]", "[]10[]"));
-
-        //satira sigdircak sekilde scale olsun resimler . gelirse assagi satira gecsin bi satirda hallolsun bir cumle
-        *//*scrollPane=new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBackground(Color.cyan);*//*
-
-        DefaultListModel listModel = new DefaultListModel();
-       *//* listModel.addElement("Jane Doe");
-        listModel.addElement("John Smith");
-        listModel.addElement("Kathy Green");*//*
-
-
-        for (String image : images) {
-            if(image=="."){
-                count++;
-                continue;
-            }
-            imageIcon = new ImageIcon(getClass().getResource(image));
-            //Image newimg =imageIcon.getImage().getScaledInstance(240,240, Image.SCALE_SMOOTH);
-            //imageIcon=new ImageIcon(newimg);
-            label = new JLabel(imageIcon);
-            //scrollPane.add(label);
-            listModel.addElement(label);
-            //add(label);
-        }
-
-        JList list = new JList(listModel); //data has type Object[]
-        //list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-
-        list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        //list.setVisibleRowCount(-1);
-        list.setBackground(Color.blue);
-        JScrollPane listScroller = new JScrollPane(list);
-        listScroller.setBackground(Color.cyan);
-        //listScroller.setPreferredSize(new Dimension(250, 80));
-        add(listScroller);*/
-
     }
 
-    public class Action implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            /*for(List<String> sentence:sentences){
-                System.out.println(sentence);
-                String[] arr = sentence.toArray(new String[0]);
-                JList list = new JList(arr);
-                list.setCellRenderer(new MarioListRenderer());
-                list.setVisibleRowCount(1); //nokta sayisi
-                list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-
-                JScrollPane scroll = new JScrollPane(list);
-                //scroll.setPreferredSize(new Dimension(300, 400));
-                //scroll.setBackground(Color.GREEN);
-                //scroll.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
-
-                panelMain.add(scroll);
-                frame.add(panelMain,BorderLayout.NORTH);
-            }*/
-            /*panelMain.setVisible(true);
-            panelMain.revalidate();
-            panelMain.validate();
-            panelMain.repaint();*/
-            System.out.println("bas bas");
-
-        }
-    }
-
-    public static void main(String[] Args) { // point png
-        List<String> imageList = new ArrayList<String>();
-        imageList.add("acil durum hattı.png");
-        imageList.add("bandaj.png");
-        imageList.add("ejderha.png");
-        imageList.add("enerji.png");
-        imageList.add("diyet.png");
-        imageList.add("doktor.png");
-        imageList.add(".");
-        imageList.add("elf.png");
-        imageList.add("ejderha.png");
-        imageList.add("enerji.png");
-        imageList.add(".");
-        /*imageList.add("ejderha.png");
-        imageList.add("acil durum hattı.png");
-        imageList.add("bandaj.png");
-        imageList.add("ejderha.png");
-        imageList.add(".");*/
-
+    public static void main(String[] Args) {
+        //Running GUI from main
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new Gui(imageList);
+                new Gui();
             }
         });
-        /*JFrame frame=new JFrame();
-
-
-        deneme1 gui = new deneme1(list);
-        frame.setContentPane(gui);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        //gui.setUndecorated(true);
-        //frame.setPreferredSize();
-        frame.setVisible(true);
-        //gui.pack();
-        frame.setTitle("imageTest");*/
-
-        /*JFrame frame = new JFrame();
-        frame.getContentPane().setLayout(new BorderLayout());
-
-        MyTableModel model = new MyTableModel();
-
-        JTable table = new JTable(model);
-        table.setRowHeight(80);
-        table.getColumnModel().getColumn(0).setCellRenderer(new ImageRenderer());
-        JScrollPane pane = new JScrollPane(table);
-        frame.getContentPane().add(BorderLayout.CENTER, pane);
-        frame.setSize(500, 400);
-        frame.setVisible(true);*/
     }
 }
 
-/*class MyTableModel extends AbstractTableModel {
-    public Object getValueAt(int row, int column) {
-        return "" + (row * column);
-    }
-
-    public int getColumnCount() {
-        return 4;
-    }
-
-    public int getRowCount() {
-        return 5;
-    }
-}
-
-class ImageRenderer extends DefaultTableCellRenderer {
-    JLabel lbl = new JLabel();
-
-    ImageIcon icon = new ImageIcon(getClass().getResource("bandaj.png"));
-
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                                                   boolean hasFocus, int row, int column) {
-        lbl.setText((String) value);
-        lbl.setIcon(icon);
-        return lbl;
-    }
-}*/
 class StretchIcon extends ImageIcon {
 
     /**
