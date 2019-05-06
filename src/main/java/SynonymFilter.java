@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-//bozdum bunu siktir et useless anyways.
 
 public class SynonymFilter {//TODO PERFORMANCE ANALYSIS OF FILTERING FUNCTIONS
     public static void main(){
