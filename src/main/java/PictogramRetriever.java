@@ -126,12 +126,12 @@ public class PictogramRetriever {
 //
 //        System.out.println(test);
 //        System.out.println(generate2(test));
-        List<String> test = new ArrayList<>();
-        test.add("P-metaller:NOUN+metal:NOUN");
-        System.out.println(findLexialSynonym("muz", Pos.NOUN));
-        System.out.println("picto: "+SelectDB(test));
+//        List<String> test = new ArrayList<>();
+//        test.add("P-metaller:NOUN+metal:NOUN");
+//        System.out.println(findLexialSynonym("muz", Pos.NOUN));
+//        System.out.println("picto: " + SelectDB(test));
 
-
+        Linker.linkerSynsetPictogram(Linker.listAllFiles("C:\\Users\\hakac\\Desktop\\sayılar"));
 //        for (List<String> s : queryBuilder(test, 3)) {
 //            System.out.println(s);
 //        }
@@ -152,7 +152,7 @@ public class PictogramRetriever {
             conn = DriverManager.getConnection(URL, USER, PASS);
             stmt = conn.createStatement();
 
-            for (int x=0;x<text.size();x++){
+            for (int x = 0; x < text.size(); x++) {
                 int index;
                 String templateText = text.get(x);
                 List<String> pictoListTemp = new ArrayList<>();
@@ -173,7 +173,12 @@ public class PictogramRetriever {
                     pictoList.add("location.png");
                 } else if (templateText.equals("ORGANIZATION")) {
                     pictoList.add("organization.png");
-                } else if (templateText.substring(0, 2).equals("P-")) {
+                } else if (templateText.equals("!")) {
+                    pictoList.add("ünlem.png");
+                }else if (templateText.equals("?")) {
+                    pictoList.add("soru işareti.png");}
+
+                /*else if (templateText.substring(0, 2).equals("P-")) {
                     List<String> returnP = new ArrayList<>();
                     for (String splited : templateText.substring(2).split("\\+")) {
                         returnP.add(splited);
@@ -183,7 +188,7 @@ public class PictogramRetriever {
                         synonymListTemp.clear();
                         synonymListTemp.add(0, s1);//for list cast
                         for (List<String> s2 : queryBuilder(synonymListTemp, 1)) {
-                            for(int i = 0;i<s2.size();i++){
+                            for (int i = 0; i < s2.size(); i++) {
                                 if (found) {
                                     break;
                                 }
@@ -200,14 +205,15 @@ public class PictogramRetriever {
                             }
                         }
                     }
-                    if(!found){
-                        index=x;
-                        text.add(index+1,returnP.get(1));
-                    }
+//                    if (!found) {
+//                        index = x;
+//                        text.add(index + 1, returnP.get(1));
+//                    }
                     if (!pictoListTemp.isEmpty()) {
                         pictoList.addAll(selectPicto(pictoListTemp));
                     }
-                } else if (templateText.substring(0, 2).equals("T-")) {
+                } */
+                else if (templateText.substring(0, 2).equals("T-")) {
                     int wordsSize = 0;
                     List<List<String>> tempSynonyms = new ArrayList<>();
                     for (String splited : templateText.substring(2).split("\\+")) {
@@ -222,9 +228,9 @@ public class PictogramRetriever {
 
                     for (int i = wordsSize; i > 0; i--) {
                         if (i == 1) {
-                            index=x;
+                            index = x;
                             for (String s : returnList) {
-                                text.add(index+1, s);
+                                text.add(index + 1, s);
                                 index++;
                             }
                             break;
@@ -315,10 +321,13 @@ public class PictogramRetriever {
                 se.printStackTrace();
             }//end finally try
         }//end try
+        System.out.println("Last morphed list:"+text);
+        System.out.println("Last morphed list size:"+text.size());
+        System.out.println("Last picto unfound:"+(text.size()-pictoList.size()));
         return pictoList;
     }
 
-    static public List<String> selectPicto(List<String> pictoList) {
+    private static List<String> selectPicto(List<String> pictoList) {
         String[] counter;
         List<String> picto_Selected = new ArrayList<>();
         int i, j;
@@ -336,7 +345,7 @@ public class PictogramRetriever {
         return picto_Selected;
     }
 
-    static public List<String> findLexialSynonym(String literal, Pos POStag) {
+    private static List<String> findLexialSynonym(String literal, Pos POStag) {
         int i, j, k, sense = 1;
         List<String> SYNONYM_SearchList = new ArrayList<>();
         List<SynSet> orderedSynSet_List = new ArrayList<SynSet>();
@@ -397,7 +406,7 @@ public class PictogramRetriever {
         return SYNONYM_SearchList;
     }
 
-    static public List<List<String>> queryBuilder(List<String> ortakArayıcı, int wordCombineCount) {
+    private static List<List<String>> queryBuilder(List<String> ortakArayıcı, int wordCombineCount) {
         int i, j;
         List<List<String>> queriess = new ArrayList<>();
         List<List<List<String>>> combinationss = new ArrayList<>();
@@ -435,7 +444,7 @@ public class PictogramRetriever {
         return queriess;
     }
 
-    public static void helper(List<List<List<String>>> combinationss, String data[], int startPoint, List<String> lemmas, int index) {
+    private static void helper(List<List<List<String>>> combinationss, String data[], int startPoint, List<String> lemmas, int index) {
         String[] datas = data.clone();
         if (index == datas.length) {
             List<List<String>> combinations = new ArrayList<>();
@@ -462,13 +471,13 @@ public class PictogramRetriever {
         }
     }
 
-    public static List<List<List<String>>> generate(List<String> lemmas, int r) {
+    private static List<List<List<String>>> generate(List<String> lemmas, int r) {
         List<List<List<String>>> combinationss = new ArrayList<>();
         helper(combinationss, new String[r], 0, lemmas, 0);
         return combinationss;
     }
 
-    public static void helper2(List<List<String>> lists, List<String> temp, List<List<String>> result, int index) {
+    private static void helper2(List<List<String>> lists, List<String> temp, List<List<String>> result, int index) {
         if (index >= lists.size()) {
             List<String> tempTemp = new ArrayList<>();
             tempTemp.addAll(temp);
@@ -483,14 +492,14 @@ public class PictogramRetriever {
         }
     }
 
-    public static List<List<String>> generate2(List<List<String>> synonymLists) {
+    private static List<List<String>> generate2(List<List<String>> synonymLists) {
         List<List<String>> result = new ArrayList<>();
         List<String> temp = new ArrayList<>();
         helper2(synonymLists, temp, result, 0);
         return result;
     }
 
-    static public String removeLemmaPos(String morfic, String part) {
+    private static String removeLemmaPos(String morfic, String part) {
         if (part.equals("pos")) {
             return morfic.substring(0, morfic.indexOf(":"));
         } else if (part.equals("lemma")) {

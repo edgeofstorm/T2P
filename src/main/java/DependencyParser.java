@@ -81,7 +81,7 @@ public class DependencyParser {
         // Loading the Swedish model swemalt-mini
         ConcurrentMaltParserModel model = null;
         try {
-            URL swemaltMiniModelURL = new File("C:\\Users\\haQQi\\Desktop\\FINISH HIM\\LITERATURE\\Simplification\\Parsing\\test\\maltparser-1.9.2\\test.mco").toURI().toURL();
+            URL swemaltMiniModelURL = new File("C:\\Users\\hakac\\T2P\\src\\main\\resources\\test.mco").toURI().toURL();
             model = ConcurrentMaltParserService.initializeParserModel(swemaltMiniModelURL);
         } catch (Exception e) {
             e.printStackTrace();

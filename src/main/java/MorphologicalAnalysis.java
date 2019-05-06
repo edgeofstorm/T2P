@@ -23,7 +23,7 @@ import org.apache.commons.lang3.*;
 @SuppressWarnings("Duplicates")
 public class MorphologicalAnalysis {
 
-    private static final String[] edats = {"gibi", "kadar", "için", "dolayı", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye", "daha", "bir","bu"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
+    private static final String[] edats = {"gibi", "kadar", "için", "dolayı", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye", "daha", "bir", "bu"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
 
     public static TurkishMorphology morphology = TurkishMorphology.createWithDefaults();
     private static TurkishSentenceExtractor sentenceExtractor = TurkishSentenceExtractor.DEFAULT;
@@ -31,7 +31,7 @@ public class MorphologicalAnalysis {
     public static void main(String Args[]) throws IOException {
 
         //Ayşe basketbolu, Mehmet futbolu sever.
-            Analyze("Beraber yürüdük biz bu yollarda.");//Ahmet enerji içeceğini içti.//Ahmet gazozun kapağını açtı.
+        Analyze("Beraber yürüdük biz bu yollarda.");//Ahmet enerji içeceğini içti.//Ahmet gazozun kapağını açtı.
     }
 
     private static List<String> SentenceExtractor(String input) {
@@ -68,9 +68,13 @@ public class MorphologicalAnalysis {
                     continue;
                 }
                 pos = s.substring(s.indexOf(":") + 1);
+
                 if (pos.trim().equalsIgnoreCase("Punc")) {
-                    list.add(s.substring(0, s.indexOf(":")));
-                    continue;
+                    if (s.contains("!") || s.contains(".") || s.contains("?")) {
+                        list.add(s.substring(0, s.indexOf(":")));
+                        continue;
+                    }
+                    else continue;
                 }
                 for (WordPos wordPos : WordPos.values()) {
                     try {
@@ -84,7 +88,7 @@ public class MorphologicalAnalysis {
                 list.add(s.substring(0, s.indexOf(":") + 1) + pos);
             }
             System.out.println("Updated morphedList: " + list);
-            //SelectDB(list);
+            System.out.println(list.size());
         }
         return list;
     }
@@ -129,7 +133,7 @@ public class MorphologicalAnalysis {
             //System.out.println(s.formatMorphemesLexical());
             originalSentence += s.surfaceForm() + " ";
 
-            if (Arrays.asList(edats).contains(s.surfaceForm())) continue; //duzelt s.formatlexical
+            // if (Arrays.asList(edats).contains(s.surfaceForm())) continue; //duzelt s.formatlexical
             if (s.getPos().getStringForm() == "Conj") {
                 morphedList.add("+");
                 continue;
@@ -141,9 +145,9 @@ public class MorphologicalAnalysis {
             }*/
 
             //get plural
-            if (ContainsPlural(s.getMorphemes()) && !s.getPos().shortForm.equalsIgnoreCase("verb")) {
-                hasPlural = true;
-            }
+//            if (ContainsPlural(s.getMorphemes()) && !s.getPos().shortForm.equalsIgnoreCase("verb")) {
+//                hasPlural = true;
+//            }
 
             //get tamlama
             if (ContainsPossession(s.getMorphemes())) {
@@ -266,10 +270,26 @@ public class MorphologicalAnalysis {
                 }
             }
         }
+        for (int i = 0; i < morphedList.size(); i++) {
+            if (ContainsAny2(morphedList.get(i), edats)) {
+                morphedList.remove(i);
+            }
+           /* if(morphedList.get(i).contains("bir:"))//edats
+                morphedList.remove(i);*/
+        }
         System.out.println("input: " + originalSentence.trim());
         System.out.println("NER: " + ((!ner.isEmpty()) ? ner : "is empty"));
         System.out.println("morphedList: " + morphedList);
+        System.out.println(morphedList.size());
         return morphedList;
+    }
+
+    private static boolean ContainsAny2(String search, String[] target) {
+        for (int j = 0; j < target.length; j++) {
+            if (search.contains(target[j]))
+                return true;
+        }
+        return false;
     }
 
     private static String hasSubject(ConcurrentDependencyGraph outputGraph) {
@@ -353,7 +373,10 @@ public class MorphologicalAnalysis {
                 String XPOS = "";
                 String FEATS = "";
                 if (suffixes.contains("+")) {
-                    XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("+"));
+                    if (suffixes.split(":")[1].indexOf("+") > suffixes.split(":")[1].indexOf("|"))
+                        XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("+"));
+                    else
+                        XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("|"));
                     FEATS = "Pos|" + lexicalMorphes.split("\\|")[0].substring(lexicalMorphes.split("\\|")[0].indexOf("+") + 1);
                 } else {
                     //System.out.println( suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("|")));
@@ -399,6 +422,23 @@ public class MorphologicalAnalysis {
                 //feats lexical.split("|")[1].substr(0,"indexof(→)")
             }
 
+            if(lexForm.contains("::")){
+                int ID = index;
+                String FORM = ":";
+                String LEMMA = ":";
+                String UPOS = "Punc";
+                String XPOS = "Punc";
+                String FEATS = "_";
+                sb.append(ID + "\t" + FORM + "\t" + LEMMA + "\t" + UPOS + "\t" + XPOS + "\t" + FEATS);
+                tokenizedWord = sb.toString();
+                sb.delete(0, sb.length());
+                //System.out.println(tokenizedWord);
+                tokens.add(tokenizedWord);
+                index++;
+                continue;
+            }
+
+
             int ID = index;
             String FORM = surface;
             String LEMMA = "";
@@ -406,18 +446,21 @@ public class MorphologicalAnalysis {
                 LEMMA = StringUtils.split(lexForm, ":")[0];
             else
                 LEMMA = StringUtils.split(suffixes, ":")[0];
-            String UPOS=lexForm.split(":")[1];
+            String UPOS = lexForm.split(":")[1];
             String XPOS = "";
             String FEATS = "";
             if (suffixes.contains("+")) {
-                XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("+"));
+                if (suffixes.split(":")[1].indexOf("+") > suffixes.split(":")[1].indexOf("|"))
+                    XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("+"));
+                else
+                    XPOS = suffixes.split(":")[1].substring(0, suffixes.split(":")[1].indexOf("|"));
             } else {
                 XPOS = suffixes.split(":")[1];
             }
-            if(lexForm.contains("Prop")){
-                FORM=LEMMA;
-                UPOS=lexForm.split(":")[1].substring(0,lexForm.split(":")[1].indexOf(","));
-                XPOS=lexForm.split(":")[1].substring(lexForm.split(":")[1].indexOf(",")+1);
+            if (lexForm.contains("Prop")) {
+                FORM = LEMMA;
+                UPOS = lexForm.split(":")[1].substring(0, lexForm.split(":")[1].indexOf(","));
+                XPOS = lexForm.split(":")[1].substring(lexForm.split(":")[1].indexOf(",") + 1);
             }
             if (lexicalMorphes.contains("+")) {
                 FEATS = lexicalMorphes.substring(lexicalMorphes.indexOf("+") + 1).replaceAll("\\+", "|");
@@ -493,12 +536,14 @@ public class MorphologicalAnalysis {
                 isPrevNoun = true;
                 temp2 = s.formatLexical().substring(1, s.formatLexical().indexOf("]"));
             }
-            if (temp.contains("Noun") && ContainsPossession(s.getMorphemes()) && isPrevNoun && !temp.contains("Prop")) {
+            if (temp.contains("Noun") && ContainsPossession(s.getMorphemes()) && isPrevNoun && !temp.contains("Prop") && count != 0) {
                 temp2 = temp2 + "+" + s.formatLexical().substring(1, s.formatLexical().indexOf("]"));
                 str = Integer.toString(count - 1) + "," + Integer.toString(count) + "-" + temp2;
                 tag = "T-" + temp2;
-                list.remove(list.size() - 1);
-                list.remove(list.size() - 1);
+                if (list.size() > 2) {
+                    list.remove(list.size() - 1);
+                    list.remove(list.size() - 1);
+                }
                 list.add(tag);
                 isPrevNoun = false;
                 temp2 = "";

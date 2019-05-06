@@ -34,6 +34,7 @@ public enum WordPos {
 
     Noun(Pos.NOUN),//guncelle  Noun(Pos.NOUN),
     NounTime(Pos.NOUN),
+    NounProp(Pos.NOUN),
     Adj(Pos.ADJECTIVE),
     Adv(Pos.ADVERB),
     Conj(Pos.CONJUNCTION),
@@ -42,6 +43,7 @@ public enum WordPos {
     Pron(Pos.PRONOUN),
     PronQuant(Pos.PRONOUN),
     PronPers(Pos.PRONOUN),
+    PronQues(Pos.PRONOUN),
     Num(Pos.NOUN),
     Det(Pos.NOUN),
     PostP(Pos.NOUN),
@@ -49,7 +51,13 @@ public enum WordPos {
     Dup(Pos.NOUN),
     Punc(Pos.NOUN),
     Unk(Pos.NOUN),
-    PronDemons(Pos.PRONOUN);
+    UnkUnk(Pos.NOUN),
+    PronDemons(Pos.PRONOUN),
+    NumCard(Pos.NOUN),
+    PostpPCAbl(Pos.NOUN),
+    PostpPCDat(Pos.NOUN),
+    NounAbbrv(Pos.NOUN),
+    PronReflex(Pos.PRONOUN);
 
     private Pos WordnetForm;
 
