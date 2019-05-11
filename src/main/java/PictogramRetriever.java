@@ -30,12 +30,12 @@ import org.apache.commons.lang3.*;
 import static WordNet.SemanticRelationType.*;
 
 public class PictogramRetriever {
-    static String URL = "jdbc:mysql://localhost/picto2text?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
+    static String URL = "jdbc:mysql://localhost/test?user=&pass=&useUnicode=true&characterEncoding=UTF-8";
     static String USER = "root";
-    static String PASS = "248163264:Hakan";
+    static String PASS = "hakki1996";
     static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
-    static String TABLE_NAME = "texttopicto";
+    static String TABLE_NAME = "text2pic";
     static int SYNSET_LIMIT = 5;
 
 // Emine ile Pınar sinemaya gitti. (”İle” yerine ”ve” gelebilir. → Bağlaç) » Bu çalışma ile sonuç alınmaz. (”İle” yerine ”ve” getirilemez. → Edat)
@@ -167,12 +167,12 @@ public class PictogramRetriever {
                     pictoList.add("artı.png");
                 } else if (templateText.equals(".")) {
                     pictoList.add("nokta.png");
-                } else if (templateText.equals("PERSON")) {
-                    pictoList.add("person.png");
-                } else if (templateText.equals("LOCATION")) {
-                    pictoList.add("location.png");
-                } else if (templateText.equals("ORGANIZATION")) {
-                    pictoList.add("organization.png");
+                } else if (templateText.contains("PERSON")) {
+                    pictoList.add("person.png"+templateText.substring(templateText.indexOf(",")));
+                } else if (templateText.contains("LOCATION")) {
+                    pictoList.add("location.png"+templateText.substring(templateText.indexOf(",")));
+                } else if (templateText.contains("ORGANIZATION")) {
+                    pictoList.add("organization.png"+templateText.substring(templateText.indexOf(",")));
                 } else if (templateText.equals("!")) {
                     pictoList.add("ünlem.png");
                 }else if (templateText.equals("?")) {
@@ -268,6 +268,7 @@ public class PictogramRetriever {
                     }
                 } else {
                     synonymList.addAll(findLexialSynonym(removeLemmaPos(templateText, "pos"), Pos.valueOf(removeLemmaPos(templateText, "lemma"))));
+                    System.out.println(synonymList);
                     for (String s1 : synonymList) {
                         if (found) {
                             break;
@@ -275,6 +276,7 @@ public class PictogramRetriever {
                         synonymListTemp.clear();
                         synonymListTemp.add(0, removeLemmaPos(s1, "pos"));
                         for (List<String> s2 : queryBuilder(synonymListTemp, synonymListTemp.size())) {
+                            System.out.println(s2);
                             for (int i = 0; i < s2.size(); i++) {
                                 if (found) {
                                     break;
@@ -294,6 +296,7 @@ public class PictogramRetriever {
                     }
                     if (!pictoListTemp.isEmpty()) {
                         pictoList.addAll(selectPicto(pictoListTemp));
+                        System.out.println(pictoList);
                     }
                 }
 
@@ -424,7 +427,7 @@ public class PictogramRetriever {
                 String JointMember_QueryPart = "";
                 for (i = 0; i < combination.size(); i++) {
                     SELECT_QueryPart += ", " + Data_objectName[i] + ".lemma";
-                    FROM_QueryPart += " texttopicto " + Data_objectName[i];
+                    FROM_QueryPart += " text2pic " + Data_objectName[i];
                     if (combination.size() - 1 != i) {
                         FROM_QueryPart += ", ";
                     }

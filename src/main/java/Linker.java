@@ -36,7 +36,11 @@ import org.apache.commons.lang3.*;
 
 public class Linker {
 
-    static String PICTO_FOLDER_PATH = "C:\\Users\\hakac\\T2P\\src\\main\\resources\\Pictograms";
+    static String PICTO_FOLDER_PATH = "src\\main\\resources\\Pictograms";
+
+    public static void main(String[] Args){
+        linkerSynsetPictogram(listAllFiles(Linker.PICTO_FOLDER_PATH));
+    }
 
     static public ArrayList<String> listAllFiles(String path) {
         ArrayList<String> fileNames = new ArrayList<>();

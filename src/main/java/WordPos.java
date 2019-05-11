@@ -1,4 +1,5 @@
 import Dictionary.Pos;
+import zemberek.morphology.morphotactics.TurkishMorphotactics;
 
 /*public enum WordPos {
 
@@ -54,10 +55,13 @@ public enum WordPos {
     UnkUnk(Pos.NOUN),
     PronDemons(Pos.PRONOUN),
     NumCard(Pos.NOUN),
+    NumDist(Pos.NOUN),
     PostpPCAbl(Pos.NOUN),
     PostpPCDat(Pos.NOUN),
+    PostpPCNom(Pos.NOUN),
     NounAbbrv(Pos.NOUN),
     PronReflex(Pos.PRONOUN);
+    //TurkishMorphotactics
 
     private Pos WordnetForm;
 

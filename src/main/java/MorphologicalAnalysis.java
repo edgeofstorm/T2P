@@ -23,7 +23,7 @@ import org.apache.commons.lang3.*;
 @SuppressWarnings("Duplicates")
 public class MorphologicalAnalysis {
 
-    private static final String[] edats = {"gibi", "kadar", "için", "dolayı", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye", "daha", "bir", "bu"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
+    private static final String[] edats = {"gibi", "kadar", "için", "dolayı", "hemen", "ötürü", "yalnız", "ancak", "tek", "üzere", "sanki", "diye", "daha", "bir", "bu"};//sadece //[sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [doğru:Adj] doğru:Adj [sabah:Noun,Time] sabah:Noun+A3sg+a:Dat [karşı:Postp,PCDat] karşı:Postp //dat+adj or dat+adv delete it.
 
     public static TurkishMorphology morphology = TurkishMorphology.createWithDefaults();
     private static TurkishSentenceExtractor sentenceExtractor = TurkishSentenceExtractor.DEFAULT;
@@ -54,7 +54,7 @@ public class MorphologicalAnalysis {
                         pos = str.substring(str.indexOf(":") + 1);
                         for (WordPos wordPos : WordPos.values()) {
                             try {
-                                if (wordPos.name().equals(pos)) {//== operator avoids null,equals throw nullpointerexception
+                                if (wordPos.name().equals(pos.replaceAll("[^a-zA-Z ]", ""))) {//== operator avoids null,equals throw nullpointerexception//wordPos.name().equals(pos)
                                     pos = wordPos.getwordnetForm();
                                     break;
                                 }
@@ -73,8 +73,7 @@ public class MorphologicalAnalysis {
                     if (s.contains("!") || s.contains(".") || s.contains("?")) {
                         list.add(s.substring(0, s.indexOf(":")));
                         continue;
-                    }
-                    else continue;
+                    } else continue;
                 }
                 for (WordPos wordPos : WordPos.values()) {
                     try {
@@ -111,9 +110,19 @@ public class MorphologicalAnalysis {
         boolean hasSubject = false;
         boolean hasTamlamaInNer = false;
 
+        List<String> NE = new ArrayList<>();
         ner = NER.NER(sentence);
         for (int i = 0; i < ner.size(); i++) {
-            ner.set(i, ner.get(i).replaceAll("\'", ""));//replaceAll("[^a-zA-Z ]", "").toLowerCase());
+
+            if (ner.get(i).contains("'"))
+                NE.add(ner.get(i).substring(ner.get(i).indexOf(" ") + 1, ner.get(i).indexOf("'")));
+            else if (ner.get(i).contains("’"))
+                NE.add(ner.get(i).substring(ner.get(i).indexOf(" ") + 1, ner.get(i).indexOf("’")));
+            else
+                NE.add(ner.get(i).substring(ner.get(i).indexOf(" ") + 1, ner.get(i).length() - 1));
+
+            ner.set(i, ner.get(i).replaceAll("'", ""));//replaceAll("[^a-zA-Z ]", "").toLowerCase());
+            ner.set(i, ner.get(i).replaceAll("’", ""));//replaceAll("[^a-zA-Z ]", "").toLowerCase());
         }
 
         for (int i = 0; i < Convert2ConllFormat(bestAnalysis).length; i++) {
@@ -167,7 +176,30 @@ public class MorphologicalAnalysis {
 
             //ner process
             if (!ner.isEmpty()) {
-                for (String nerr : ner) {
+                String nerr = "";
+                String prop = "";
+                //i li yap ozel isimleri al
+                for (int i = 0; i < ner.size(); i++) {
+                    nerr = ner.get(i);
+                    prop = NE.get(i);
+
+                    if (StringUtils.equalsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {
+                        morphedList.remove(morphedList.size() - 1);
+                        morphedList.add(nerr.substring(1, nerr.indexOf(" ")) + "," + prop);
+                    } else if (StringUtils.containsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {
+                        if (!nertemp.trim().equals(s.surfaceForm()))
+                            nertemp += s.surfaceForm() + " ";
+                        if (StringUtils.equalsIgnoreCase(nertemp.trim(), nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1))) {
+                            if (ArrayUtils.contains(tamlamaIndexes, Integer.toString(index)))
+                                hasTamlamaInNer = true;
+                            for (int j = StringUtils.countMatches(nertemp.trim(), " "); j > -1; j--)
+                                morphedList.remove(morphedList.size() - 1);
+                            morphedList.add(nerr.substring(1, nerr.indexOf(" ")) + "," + prop);
+                            nertemp = "";
+                        }
+                    }
+                }
+                /*for (String nerr : ner) {
                     //tek kelimeli Named Entities
                     if (StringUtils.equalsIgnoreCase(nerr.substring(nerr.indexOf(" ") + 1, nerr.length() - 1), s.surfaceForm())) {
                         morphedList.remove(morphedList.size() - 1);
@@ -184,11 +216,12 @@ public class MorphologicalAnalysis {
                             nertemp = "";
                         }
                     }
-                }
+                }*/
             }
 
             //if no subject found in both syntax analysis and NER add pronouns
             if (s.getPos().getStringForm() == "Verb" && !hasSubject) {
+                hasSubject=true;
                 isPronounAdded = true;
                 switch (getPersonTag(s.getMorphemes())) {
                     case "A1sg"://TurkishMorphotactics.a1sg.id.toString()(constant expr required)
@@ -271,7 +304,7 @@ public class MorphologicalAnalysis {
             }
         }
         for (int i = 0; i < morphedList.size(); i++) {
-            if (ContainsAny2(morphedList.get(i), edats)) {
+            if (ContainsAny2(morphedList.get(i), edats)) {//.substring(0,morphedList.get(i).indexOf(":")
                 morphedList.remove(i);
             }
            /* if(morphedList.get(i).contains("bir:"))//edats
@@ -286,8 +319,10 @@ public class MorphologicalAnalysis {
 
     private static boolean ContainsAny2(String search, String[] target) {
         for (int j = 0; j < target.length; j++) {
-            if (search.contains(target[j]))
-                return true;
+            if (search.contains(":")) {
+                if (search.substring(0, search.indexOf(":")).equals(target[j]))//search.contains(target[j])Ayvalik belediyesi -> diye
+                    return true;
+            }
         }
         return false;
     }
@@ -422,7 +457,7 @@ public class MorphologicalAnalysis {
                 //feats lexical.split("|")[1].substr(0,"indexof(→)")
             }
 
-            if(lexForm.contains("::")){
+            if (lexForm.contains("::")) {
                 int ID = index;
                 String FORM = ":";
                 String LEMMA = ":";
