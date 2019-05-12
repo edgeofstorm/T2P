@@ -107,6 +107,10 @@ public class PictogramRetriever {
 //        System.out.println(findLexialSynonym("kapak", Pos.NOUN));
 //        System.out.println(findLexialSynonym("açmak", Pos.VERB));
 
+        String text="T-baş:NOUN+uç:NOUN+lamba:NOUN";
+        List<String> temp=new ArrayList<>();
+        temp.add(text);
+        System.out.println(SelectDB(temp));
 
 //        List<List<String>> test = new ArrayList<>();
 //        List<String> test1 = new ArrayList<>();
@@ -131,20 +135,18 @@ public class PictogramRetriever {
 //        System.out.println(findLexialSynonym("muz", Pos.NOUN));
 //        System.out.println("picto: " + SelectDB(test));
 
-        Linker.linkerSynsetPictogram(Linker.listAllFiles("C:\\Users\\hakac\\Desktop\\sayılar"));
+        //Linker.linkerSynsetPictogram(Linker.listAllFiles("C:\\Users\\hakac\\Desktop\\sayılar"));
 //        for (List<String> s : queryBuilder(test, 3)) {
 //            System.out.println(s);
 //        }
-
-
     }
-
 
     @SuppressWarnings("Duplicates")
     static public List<String> SelectDB(List<String> text) {
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
+        System.out.println("initial morphed list: "+text);
 
         List<String> pictoList = new ArrayList<>();
         try {
@@ -236,8 +238,10 @@ public class PictogramRetriever {
                             break;
                         }
                         for (List<String> s1 : generate2(tempSynonyms)) {
+                            System.out.println(s1);
                             pictoListsTemp.clear();
                             for (List<String> s2 : queryBuilder(s1, i)) {
+                                System.out.println(s2);
                                 pictoListTemp.clear();
                                 for (int j = 0; j < s2.size(); j++) {
                                     rs = stmt.executeQuery(s2.get(j));
@@ -250,7 +254,7 @@ public class PictogramRetriever {
                                         found = true;
                                     }
                                     while (rs.next());
-                                    pictoListsTemp.add(pictoList);
+                                    pictoListsTemp.add(pictoListTemp);
                                 }
                                 if (found) {
                                     break;
@@ -260,8 +264,11 @@ public class PictogramRetriever {
                                 break;
                             }
                         }
+                        if (found) {
+                            break;
+                        }
                     }
-                    if (!pictoListTemp.isEmpty()) {
+                    if (!pictoListsTemp.isEmpty()) {
                         for (List<String> s : pictoListsTemp) {
                             pictoList.addAll(selectPicto(s));
                         }
