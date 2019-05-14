@@ -1,6 +1,6 @@
 Text2Pictogram for Turkish
 ==========================
-Text2Pictogram aims to **help** people with intellectual or developmental disabilities (IDD) communicate the world with ease.
+Text2Pictogram aims to **help** people with intellectual or developmental disabilities (IDD) communicate the world with ease. For more information read conferiance paper on wiki tab.
 
 ## Usage
 
