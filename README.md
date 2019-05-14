@@ -4,15 +4,24 @@ Text2Pictogram aims to **help** people with intellectual or developmental disabi
 
 ## Usage
 
-### Open project with IntelliJ IDEA
+### Open IntelliJ IDEA
 
-Steps for opening the cloned project:
+Steps for starting the cloned project:
 
-* Start IDE
-* Select **File | Open** from main menu
-* Choose `T2P/pom.xml` file
-* Select open as project option
-* Couple of seconds, dependencies with Maven will be downloaded. 
+* You should need to download resources with Git Bash. Command-line code below;
+  * git clone https://github.com/ahmetaa/zemberek-nlp
+  * git clone https://github.com/olcaytaner/MorphologicalAnalysis
+  *	git clone https://github.com/olcaytaner/WordNet
+  *	git clone https://github.com/edgeofstorm/T2P 
+* You should use Maven
+  * Add pom.xml all downloaded resources to Maven
+  * Then Build project, Maven "compile", "package"
+  * If there is any failure. Use 11 version of Java SE
+* You must use link WordNet to pictograms
+  * Check linker class on main code
+* You must need train model for NER
+* You must need train model for Syntax
+
 
 ### xercesimpl.jar
 
@@ -26,23 +35,8 @@ tested some random picked pictos.zemberek causes a problem in both inserting and
 
 ## PARTS THAT NEED FIXING
 
-//FIXME
-* NER test dosyasini gelistir.
-* zemberek sacma sacma kokler aliyo reyizin morfolojisine bak(maybe ITS BECAUSE .ignoreDiacriticsInAnalysis())
-* SyntaxAnalysis
-* deletePossession updatele
-* linkersynsetpictogram (yuklerken orjinal kelimeyi al possession yoksa).
-
 ***Please see issues section for further issues and feel free to create new ones.***
 
-## SynoymFilter
-
-Replaces a word in a .txt file with the highest usage frequency of all its synoyms.(Not functioning correctly rn)
-
-## NamedEntityRecognition
-
-train,test and model files can be found in src/main/resources
-https://github.com/ahmetaa/zemberek-nlp and http://haydut.isikun.edu.tr/nlptoolkit.html eyvallah reyizler
 
 ## LAST BUT NOT LEAST
 ***Licensed under Onur®,Hakaci© and haQQi™***
